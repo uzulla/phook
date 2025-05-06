@@ -2,3 +2,5 @@
 .vscode/
 *.tgz
 
+
+**/.claude/settings.local.json

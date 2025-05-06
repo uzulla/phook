@@ -1,0 +1,10 @@
+PHook PHP Extension
+Copyright 2023 Junichi Ishida aka uzulla (zishida@gmail.com)
+
+This product is derived from the OpenTelemetry PHP Instrumentation extension, 
+originally developed at the OpenTelemetry project (https://opentelemetry.io/).
+Copyright 2019-2023 The OpenTelemetry Authors
+
+This derivative work maintains the same Apache License 2.0 as the original work,
+while focusing solely on the function hooking capabilities and removing the 
+OpenTelemetry-specific features.
