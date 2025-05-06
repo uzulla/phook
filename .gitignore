@@ -1,6 +1,10 @@
 .idea
 .vscode/
 *.tgz
-
+*.dep
+*.lo
+*.la
+.libs/
+modules/
 
 **/.claude/settings.local.json
