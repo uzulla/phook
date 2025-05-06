@@ -1,10 +1,10 @@
 --TEST--
 Check if process exits gracefully after using ini_set with an opentelemetry option
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-ini_set('opentelemetry.conflicts', 'test');
+ini_set('phook.conflicts', 'test');
 var_dump('done');
 ?>
 --EXPECT--

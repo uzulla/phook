@@ -1,7 +1,7 @@
 --TEST--
 Check if pre hook can try to modify invalid named params of function
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(
@@ -20,7 +20,7 @@ function hello($one = null, $two = null, $three = null) {
 hello('a', 'b', 'c');
 ?>
 --EXPECTF--
-Warning: hello(): OpenTelemetry: pre hook unknown named arg four, class=null function=hello in %s
+Warning: hello(): Phook: pre hook unknown named arg four, class=null function=hello in %s
 array(3) {
   [0]=>
   string(1) "a"

@@ -1,7 +1,7 @@
 --TEST--
 Check if exceptions thrown in hooks are isolated and logged
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 \OpenTelemetry\Instrumentation\hook(null, 'helloWorld', pre: fn() => throw new Exception('thrown in pre'), post: fn() => throw new Exception('thrown in post'));
@@ -20,9 +20,9 @@ try {
 ?>
 --EXPECTF--
 
-Warning: helloWorld(): OpenTelemetry: pre hook threw exception, class=null function=helloWorld message=thrown in pre in %s
+Warning: helloWorld(): Phook: pre hook threw exception, class=null function=helloWorld message=thrown in pre in %s
 string(8) "function"
 
-Warning: helloWorld(): OpenTelemetry: post hook threw exception, class=null function=helloWorld message=thrown in post in %s
+Warning: helloWorld(): Phook: post hook threw exception, class=null function=helloWorld message=thrown in post in %s
 string(8) "original"
 NULL

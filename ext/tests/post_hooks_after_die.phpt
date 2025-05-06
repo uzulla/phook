@@ -1,19 +1,19 @@
 --TEST--
 Calling die/exit still executes post hooks
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 
 <?php
 
-use function OpenTelemetry\Instrumentation\hook;
+use function Phook\hook;
 
 function goodbye() {
     var_dump('goodbye');
     die;
 }
 
-\OpenTelemetry\Instrumentation\hook(null, 'goodbye', fn() => var_dump('PRE'), fn() => var_dump('POST'));
+\Phook\hook(null, 'goodbye', fn() => var_dump('PRE'), fn() => var_dump('POST'));
 
 goodbye();
 ?>

@@ -153,7 +153,7 @@ static bool func_has_withspan_attribute(zend_execute_data *ex) {
 }
 
 /*
- * OpenTelemetry attribute values may only be of limited types
+ * Phook attribute values may only be of limited types
  */
 static bool is_valid_attribute_value(zval *val) {
     switch (Z_TYPE_P(val)) {
@@ -377,7 +377,7 @@ bool is_object_compatible_with_type_hint(zval *object_zval,
  * Check if pre/post function callback's signature is compatible with
  * the expected function signature.
  * This is a runtime check, since some parameters are only known at runtime.
- * Can be disabled via the opentelemetry.check_hook_functions ini value.
+ * Can be disabled via the phook.validate_hook_functions ini value.
  */
 static inline bool is_valid_signature(zend_fcall_info fci,
                                       zend_fcall_info_cache fcc) {

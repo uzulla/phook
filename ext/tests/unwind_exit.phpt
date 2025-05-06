@@ -1,7 +1,7 @@
 --TEST--
 Test UnwindExit from die/exit is not exposed to userland code
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 
 <?php

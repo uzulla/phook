@@ -1,7 +1,7 @@
 --TEST--
 Check hooking static class methods provides class name as 1st param
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 \OpenTelemetry\Instrumentation\hook(

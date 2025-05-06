@@ -1,7 +1,7 @@
 --TEST--
 Check if hooks receive modified return value
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 \OpenTelemetry\Instrumentation\hook(null, 'helloWorld', post: fn(mixed $object, array $params, int $return): int => ++$return);

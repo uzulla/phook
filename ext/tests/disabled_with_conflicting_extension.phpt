@@ -1,9 +1,9 @@
 --TEST--
 Check if opentelemetry extension is loaded but disabled with a conflicting extension
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.conflicts=Core
+phook.conflicts=Core
 --FILE--
 <?php
 ?>

@@ -1,7 +1,7 @@
 --TEST--
 Check if pre hook can expand then return $params
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 \OpenTelemetry\Instrumentation\hook(null, 'helloWorld', function($obj, array $params) {

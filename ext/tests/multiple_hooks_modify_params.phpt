@@ -1,7 +1,7 @@
 --TEST--
 Check if hooks receive modified arguments
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 \OpenTelemetry\Instrumentation\hook(null, 'helloWorld', fn(mixed $object, array $params) => [++$params[0]]);

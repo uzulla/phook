@@ -4,7 +4,7 @@ Check if exceptions thrown in hooks work if custom error handler throws
 If the extension internally logs errors/warnings in a way that set_error_handler gets invoked, then any
 exceptions/errors may cause the process to crash or hang if raising a throwable was not safe at that moment.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 set_error_handler(function (int $errno, string $message) {
@@ -23,7 +23,7 @@ function helloWorld() {
 helloWorld();
 ?>
 --EXPECTF--
-Warning: helloWorld(): OpenTelemetry: pre hook threw exception, class=null function=helloWorld message=pre in %s
+Warning: helloWorld(): Phook: pre hook threw exception, class=null function=helloWorld message=pre in %s
 
 Fatal error: Uncaught Error: test in %s
 Stack trace:

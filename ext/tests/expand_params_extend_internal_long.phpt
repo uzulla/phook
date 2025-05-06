@@ -7,9 +7,9 @@ and cause a crash with a large number of extra parameters.
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80200) die('skip requires PHP >= 8.2'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.allow_stack_extension=On
+phook.allow_stack_extension=On
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(

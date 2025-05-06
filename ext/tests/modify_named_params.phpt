@@ -1,7 +1,7 @@
 --TEST--
 Check if pre hook can modify named params of function
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(

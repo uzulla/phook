@@ -3,9 +3,9 @@ Check if pre hook can expand params of internal function when that requires exte
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80200) die('skip requires PHP >= 8.2'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.allow_stack_extension=On
+phook.allow_stack_extension=On
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(

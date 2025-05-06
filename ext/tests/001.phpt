@@ -1,7 +1,7 @@
 --TEST--
 Check if opentelemetry extension is loaded
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 printf('The extension "opentelemetry" is available, version %s', phpversion('opentelemetry'));

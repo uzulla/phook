@@ -4,7 +4,7 @@ Test invalid post callback signature
 The invalid callback signature should not cause a fatal, so it is checked before execution. If the function signature
 is invalid, the callback will not be called.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(
@@ -32,4 +32,4 @@ TestClass::test();
 string(3) "pre"
 string(4) "test"
 
-Warning: TestClass::test(): OpenTelemetry: post hook invalid signature, class=TestClass function=test in %s on line %d
+Warning: TestClass::test(): Phook: post hook invalid signature, class=TestClass function=test in %s on line %d

@@ -1,7 +1,7 @@
 --TEST--
 Check if hook returns true
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 $ret = \OpenTelemetry\Instrumentation\hook(null, 'some_function');

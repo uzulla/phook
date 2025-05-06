@@ -3,9 +3,9 @@ Check if WithSpanHandler can be provided by an autoloader
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80100) die('skip requires PHP >= 8.1'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.attr_hooks_enabled = On
+phook.attr_hooks_enabled = On
 --FILE--
 <?php
 include dirname(__DIR__) . '/mocks/WithSpan.php';

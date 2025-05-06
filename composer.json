@@ -1,11 +1,11 @@
 {
-  "name": "open-telemetry/ext-opentelemetry",
-  "description": "Auto-instrumentation extension for OpenTelemetry",
+  "name": "uzulla/ext-phook",
+  "description": "Method hooking extension for PHP",
   "type": "php-ext",
   "minimum-stability": "stable",
   "license": "Apache-2.0",
   "php-ext": {
-    "extension-name": "opentelemetry",
+    "extension-name": "phook",
     "build-path": "ext"
   },
   "require": {
@@ -13,8 +13,8 @@
   },
   "authors": [
     {
-      "name": "opentelemetry-php contributors",
-      "homepage": "https://github.com/open-telemetry/opentelemetry-php-instrumentation/graphs/contributors"
+      "name": "uzulla",
+      "homepage": "https://github.com/uzulla/phook/graphs/contributors"
     }
   ]
 }

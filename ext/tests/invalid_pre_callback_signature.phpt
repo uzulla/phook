@@ -4,7 +4,7 @@ Test invalid pre callback signature
 The invalid callback signature should not cause a fatal, so it is checked before execution. If the function signature
 is invalid, the callback will not be called and a message will be written to error_log.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(
@@ -29,6 +29,6 @@ class TestClass {
 TestClass::test();
 ?>
 --EXPECTF--
-Warning: TestClass::test(): OpenTelemetry: pre hook invalid signature, class=TestClass function=test in %s on line %d
+Warning: TestClass::test(): Phook: pre hook invalid signature, class=TestClass function=test in %s on line %d
 string(4) "test"
 string(4) "post"

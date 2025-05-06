@@ -1,7 +1,7 @@
 --TEST--
 Check if calling die or exit will finish gracefully
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 
 <?php

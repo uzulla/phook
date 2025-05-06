@@ -5,7 +5,7 @@ Extra parameters for user functions are parameters that were provided at call si
 declaration. The extension only supports modifying existing ones, not adding new ones. Test that a warning is logged if
 adding new ones is attempted and that it does not crash.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 OpenTelemetry\Instrumentation\hook(
@@ -23,7 +23,7 @@ function helloWorld($a, $b) {
 helloWorld('a');
 ?>
 --EXPECTF--
-Warning: helloWorld(): OpenTelemetry: pre hook invalid argument index 2 - stack extension must be enabled with opentelemetry.allow_stack_extension option, class=null function=helloWorld in %s
+Warning: helloWorld(): Phook: pre hook invalid argument index 2 - stack extension must be enabled with phook.allow_stack_extension option, class=null function=helloWorld in %s
 array(2) {
   [0]=>
   string(1) "a"
