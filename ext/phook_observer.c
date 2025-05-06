@@ -1,36 +1,36 @@
 
 #include "php.h"
-#include "otel_observer.h"
+#include "phook_observer.h"
 #include "zend_observer.h"
 #include "zend_execute.h"
 #include "zend_extensions.h"
 #include "zend_exceptions.h"
 #include "zend_attributes.h"
-#include "php_opentelemetry.h"
+#include "php_phook.h"
 
 static int op_array_extension = -1;
 
-const char *withspan_fqn_lc = "opentelemetry\\api\\instrumentation\\withspan";
+const char *withspan_fqn_lc = "phook\\withspan";
 const char *spanattribute_fqn_lc =
-    "opentelemetry\\api\\instrumentation\\spanattribute";
+    "phook\\spanattribute";
 static char *with_span_attribute_args_keys[] = {"name", "span_kind"};
 
-typedef struct otel_observer {
+typedef struct phook_observer {
     zend_llist pre_hooks;
     zend_llist post_hooks;
-} otel_observer;
+} phook_observer;
 
-typedef struct otel_exception_state {
+typedef struct phook_exception_state {
     zend_object *exception;
     zend_object *prev_exception;
     const zend_op *opline_before_exception;
     bool has_opline;
     const zend_op *opline;
-} otel_exception_state;
+} phook_exception_state;
 
 #define STACK_EXTENSION_LIMIT 16
 
-typedef struct otel_arg_locator {
+typedef struct phook_arg_locator {
     zend_execute_data *execute_data;
     // Number of argument slots reserved in execute_data, any arguments beyond
     // this limit will be stored after auxiliary slots
@@ -44,7 +44,7 @@ typedef struct otel_arg_locator {
     uint32_t extended_max;
     uint32_t extended_used;
     zval extended_slots[STACK_EXTENSION_LIMIT];
-} otel_arg_locator;
+} phook_arg_locator;
 
 static inline void
 func_get_this_or_called_scope(zval *zv, zend_execute_data *execute_data) {
@@ -610,7 +610,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
     ALLOC_HASHTABLE(attributes);
     zend_hash_init(attributes, 0, NULL, ZVAL_PTR_DTOR, 0);
     bool check_for_attributes =
-        OTEL_G(attr_hooks_enabled) && func_has_withspan_attribute(execute_data);
+        PHOOK_G(attr_hooks_enabled) && func_has_withspan_attribute(execute_data);
 
     func_get_this_or_called_scope(&params[0], execute_data);
     func_get_attribute_args(&params[6], attributes, execute_data);
@@ -641,7 +641,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
 
         if (!is_valid_signature(fci, fcc)) {
             php_error_docref(NULL, E_CORE_WARNING,
-                             "OpenTelemetry: pre hook invalid signature,"
+                             "Phook: pre hook invalid signature,"
                              " class=%s function=%s",
                              (Z_TYPE_P(&params[2]) == IS_NULL)
                                  ? "null"
@@ -650,7 +650,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
             continue;
         }
 
-        otel_exception_state save_state;
+        phook_exception_state save_state;
         exception_isolation_start(&save_state);
 
         if (zend_call_function(&fci, &fcc) == SUCCESS) {
@@ -661,7 +661,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                 zval *val;
                 bool invalid_arg_warned = false;
 
-                otel_arg_locator arg_locator;
+                phook_arg_locator arg_locator;
                 arg_locator_initialize(&arg_locator, execute_data);
                 uint32_t args_initialized = arg_locator.provided;
 
@@ -674,7 +674,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                         if (idx == (uint32_t)-1) {
                             php_error_docref(
                                 NULL, E_CORE_WARNING,
-                                "OpenTelemetry: pre hook unknown "
+                                "Phook: pre hook unknown "
                                 "named arg %s, class=%s function=%s",
                                 ZSTR_VAL(str_idx), zval_get_chars(&params[2]),
                                 zval_get_chars(&params[3]));
@@ -691,7 +691,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                         }
 
                         php_error_docref(NULL, E_CORE_WARNING,
-                                         "OpenTelemetry: pre hook invalid "
+                                         "Phook: pre hook invalid "
                                          "argument index " ZEND_ULONG_FMT
                                          " - %s, class=%s function=%s",
                                          idx, failure_reason,
@@ -1116,10 +1116,10 @@ bool add_observer(zend_string *cn, zend_string *fn, zval *pre_hook,
     }
 
     if (cn) {
-        add_method_observer(OTEL_G(observer_class_lookup), cn, fn, pre_hook,
+        add_method_observer(PHOOK_G(observer_class_lookup), cn, fn, pre_hook,
                             post_hook);
     } else {
-        add_function_observer(OTEL_G(observer_function_lookup), fn, pre_hook,
+        add_function_observer(PHOOK_G(observer_function_lookup), fn, pre_hook,
                               post_hook);
     }
 
@@ -1127,48 +1127,48 @@ bool add_observer(zend_string *cn, zend_string *fn, zval *pre_hook,
 }
 
 void observer_globals_init(void) {
-    if (!OTEL_G(observer_class_lookup)) {
-        ALLOC_HASHTABLE(OTEL_G(observer_class_lookup));
-        zend_hash_init(OTEL_G(observer_class_lookup), 8, NULL,
+    if (!PHOOK_G(observer_class_lookup)) {
+        ALLOC_HASHTABLE(PHOOK_G(observer_class_lookup));
+        zend_hash_init(PHOOK_G(observer_class_lookup), 8, NULL,
                        destroy_observer_class_lookup, 0);
     }
-    if (!OTEL_G(observer_function_lookup)) {
-        ALLOC_HASHTABLE(OTEL_G(observer_function_lookup));
-        zend_hash_init(OTEL_G(observer_function_lookup), 8, NULL,
+    if (!PHOOK_G(observer_function_lookup)) {
+        ALLOC_HASHTABLE(PHOOK_G(observer_function_lookup));
+        zend_hash_init(PHOOK_G(observer_function_lookup), 8, NULL,
                        destroy_observer_lookup, 0);
     }
-    if (!OTEL_G(observer_aggregates)) {
-        ALLOC_HASHTABLE(OTEL_G(observer_aggregates));
-        zend_hash_init(OTEL_G(observer_aggregates), 8, NULL,
+    if (!PHOOK_G(observer_aggregates)) {
+        ALLOC_HASHTABLE(PHOOK_G(observer_aggregates));
+        zend_hash_init(PHOOK_G(observer_aggregates), 8, NULL,
                        destroy_observer_lookup, 0);
     }
 }
 
 void observer_globals_cleanup(void) {
-    if (OTEL_G(observer_class_lookup)) {
-        zend_hash_destroy(OTEL_G(observer_class_lookup));
-        FREE_HASHTABLE(OTEL_G(observer_class_lookup));
-        OTEL_G(observer_class_lookup) = NULL;
+    if (PHOOK_G(observer_class_lookup)) {
+        zend_hash_destroy(PHOOK_G(observer_class_lookup));
+        FREE_HASHTABLE(PHOOK_G(observer_class_lookup));
+        PHOOK_G(observer_class_lookup) = NULL;
     }
-    if (OTEL_G(observer_function_lookup)) {
-        zend_hash_destroy(OTEL_G(observer_function_lookup));
-        FREE_HASHTABLE(OTEL_G(observer_function_lookup));
-        OTEL_G(observer_function_lookup) = NULL;
+    if (PHOOK_G(observer_function_lookup)) {
+        zend_hash_destroy(PHOOK_G(observer_function_lookup));
+        FREE_HASHTABLE(PHOOK_G(observer_function_lookup));
+        PHOOK_G(observer_function_lookup) = NULL;
     }
-    if (OTEL_G(observer_aggregates)) {
-        zend_hash_destroy(OTEL_G(observer_aggregates));
-        FREE_HASHTABLE(OTEL_G(observer_aggregates));
-        OTEL_G(observer_aggregates) = NULL;
+    if (PHOOK_G(observer_aggregates)) {
+        zend_hash_destroy(PHOOK_G(observer_aggregates));
+        FREE_HASHTABLE(PHOOK_G(observer_aggregates));
+        PHOOK_G(observer_aggregates) = NULL;
     }
 }
 
-void opentelemetry_observer_init(INIT_FUNC_ARGS) {
+void phook_observer_init(INIT_FUNC_ARGS) {
     if (type != MODULE_TEMPORARY) {
         zend_observer_fcall_register(observer_fcall_init);
         op_array_extension =
-            zend_get_op_array_extension_handle("opentelemetry");
+            zend_get_op_array_extension_handle("phook");
 #if PHP_VERSION_ID >= 80400
-        zend_get_internal_function_extension_handle("opentelemetry");
+        zend_get_internal_function_extension_handle("phook");
 #endif
     }
 }

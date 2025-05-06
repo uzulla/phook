@@ -5,9 +5,9 @@
 
 #include "php.h"
 #include "ext/standard/info.h"
-#include "php_opentelemetry.h"
-#include "opentelemetry_arginfo.h"
-#include "otel_observer.h"
+#include "php_phook.h"
+#include "phook_arginfo.h"
+#include "phook_observer.h"
 #include "stdlib.h"
 #include "string.h"
 #include "zend_attributes.h"
@@ -21,7 +21,7 @@ static int check_conflict(HashTable *registry, const char *extension_name) {
     ZEND_HASH_FOREACH_PTR(registry, module_entry) {
         if (strcmp(module_entry->name, extension_name) == 0) {
             php_error_docref(NULL, E_NOTICE,
-                             "Conflicting extension found (%s), OpenTelemetry "
+                             "Conflicting extension found (%s), Phook "
                              "extension will be disabled",
                              extension_name);
             return 1;
@@ -33,7 +33,7 @@ static int check_conflict(HashTable *registry, const char *extension_name) {
 
 static void check_conflicts() {
     int conflict_found = 0;
-    char *input = OTEL_G(conflicts);
+    char *input = PHOOK_G(conflicts);
 
     if (!input || !*input) {
         return;
@@ -70,41 +70,41 @@ static void check_conflicts() {
         conflict_found = 1;
     }
 
-    OTEL_G(disabled) = conflict_found;
+    PHOOK_G(disabled) = conflict_found;
 }
 
-ZEND_DECLARE_MODULE_GLOBALS(opentelemetry)
+ZEND_DECLARE_MODULE_GLOBALS(phook)
 
 PHP_INI_BEGIN()
 // conflicting extensions. a comma-separated list, eg "ext1,ext2"
-STD_PHP_INI_ENTRY("opentelemetry.conflicts", "", PHP_INI_ALL, OnUpdateString,
-                  conflicts, zend_opentelemetry_globals, opentelemetry_globals)
-STD_PHP_INI_ENTRY_EX("opentelemetry.validate_hook_functions", "On", PHP_INI_ALL,
+STD_PHP_INI_ENTRY("phook.conflicts", "", PHP_INI_ALL, OnUpdateString,
+                  conflicts, zend_phook_globals, phook_globals)
+STD_PHP_INI_ENTRY_EX("phook.validate_hook_functions", "On", PHP_INI_ALL,
                      OnUpdateBool, validate_hook_functions,
-                     zend_opentelemetry_globals, opentelemetry_globals,
+                     zend_phook_globals, phook_globals,
                      zend_ini_boolean_displayer_cb)
-STD_PHP_INI_ENTRY_EX("opentelemetry.allow_stack_extension", "Off", PHP_INI_ALL,
+STD_PHP_INI_ENTRY_EX("phook.allow_stack_extension", "Off", PHP_INI_ALL,
                      OnUpdateBool, allow_stack_extension,
-                     zend_opentelemetry_globals, opentelemetry_globals,
+                     zend_phook_globals, phook_globals,
                      zend_ini_boolean_displayer_cb)
-STD_PHP_INI_ENTRY_EX("opentelemetry.attr_hooks_enabled", "Off", PHP_INI_ALL,
+STD_PHP_INI_ENTRY_EX("phook.attr_hooks_enabled", "Off", PHP_INI_ALL,
                      OnUpdateBool, attr_hooks_enabled,
-                     zend_opentelemetry_globals, opentelemetry_globals,
+                     zend_phook_globals, phook_globals,
                      zend_ini_boolean_displayer_cb)
-STD_PHP_INI_ENTRY_EX("opentelemetry.display_warnings", "Off", PHP_INI_ALL,
-                     OnUpdateBool, display_warnings, zend_opentelemetry_globals,
-                     opentelemetry_globals, zend_ini_boolean_displayer_cb)
-STD_PHP_INI_ENTRY("opentelemetry.attr_pre_handler_function",
-                  "OpenTelemetry\\API\\Instrumentation\\WithSpanHandler::pre",
+STD_PHP_INI_ENTRY_EX("phook.display_warnings", "Off", PHP_INI_ALL,
+                     OnUpdateBool, display_warnings, zend_phook_globals,
+                     phook_globals, zend_ini_boolean_displayer_cb)
+STD_PHP_INI_ENTRY("phook.attr_pre_handler_function",
+                  "Phook\\WithSpanHandler::pre",
                   PHP_INI_ALL, OnUpdateString, pre_handler_function_fqn,
-                  zend_opentelemetry_globals, opentelemetry_globals)
-STD_PHP_INI_ENTRY("opentelemetry.attr_post_handler_function",
-                  "OpenTelemetry\\API\\Instrumentation\\WithSpanHandler::post",
+                  zend_phook_globals, phook_globals)
+STD_PHP_INI_ENTRY("phook.attr_post_handler_function",
+                  "Phook\\WithSpanHandler::post",
                   PHP_INI_ALL, OnUpdateString, post_handler_function_fqn,
-                  zend_opentelemetry_globals, opentelemetry_globals)
+                  zend_phook_globals, phook_globals)
 PHP_INI_END()
 
-PHP_FUNCTION(OpenTelemetry_Instrumentation_hook) {
+PHP_FUNCTION(Phook_hook) {
     zend_string *class_name;
     zend_string *function_name;
     zval *pre = NULL;
@@ -121,8 +121,8 @@ PHP_FUNCTION(OpenTelemetry_Instrumentation_hook) {
     RETURN_BOOL(add_observer(class_name, function_name, pre, post));
 }
 
-PHP_RINIT_FUNCTION(opentelemetry) {
-#if defined(ZTS) && defined(COMPILE_DL_OPENTELEMETRY)
+PHP_RINIT_FUNCTION(phook) {
+#if defined(ZTS) && defined(COMPILE_DL_PHOOK)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
@@ -131,14 +131,14 @@ PHP_RINIT_FUNCTION(opentelemetry) {
     return SUCCESS;
 }
 
-PHP_RSHUTDOWN_FUNCTION(opentelemetry) {
+PHP_RSHUTDOWN_FUNCTION(phook) {
     observer_globals_cleanup();
 
     return SUCCESS;
 }
 
-PHP_MINIT_FUNCTION(opentelemetry) {
-#if defined(ZTS) && defined(COMPILE_DL_OPENTELEMETRY)
+PHP_MINIT_FUNCTION(phook) {
+#if defined(ZTS) && defined(COMPILE_DL_PHOOK)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
@@ -146,53 +146,53 @@ PHP_MINIT_FUNCTION(opentelemetry) {
 
     check_conflicts();
 
-    if (!OTEL_G(disabled)) {
-        opentelemetry_observer_init(INIT_FUNC_ARGS_PASSTHRU);
+    if (!PHOOK_G(disabled)) {
+        phook_observer_init(INIT_FUNC_ARGS_PASSTHRU);
     }
 
     return SUCCESS;
 }
 
-PHP_MSHUTDOWN_FUNCTION(opentelemetry) {
+PHP_MSHUTDOWN_FUNCTION(phook) {
     UNREGISTER_INI_ENTRIES();
 
     return SUCCESS;
 }
 
-PHP_MINFO_FUNCTION(opentelemetry) {
+PHP_MINFO_FUNCTION(phook) {
     php_info_print_table_start();
-    php_info_print_table_row(2, "opentelemetry hooks",
-                             OTEL_G(disabled) ? "disabled (conflict)"
+    php_info_print_table_row(2, "phook hooks",
+                             PHOOK_G(disabled) ? "disabled (conflict)"
                                               : "enabled");
-    php_info_print_table_row(2, "extension version", PHP_OPENTELEMETRY_VERSION);
+    php_info_print_table_row(2, "extension version", PHP_PHOOK_VERSION);
     php_info_print_table_end();
     DISPLAY_INI_ENTRIES();
 }
 
-PHP_GINIT_FUNCTION(opentelemetry) {
-    ZEND_SECURE_ZERO(opentelemetry_globals, sizeof(*opentelemetry_globals));
+PHP_GINIT_FUNCTION(phook) {
+    ZEND_SECURE_ZERO(phook_globals, sizeof(*phook_globals));
 }
 
-zend_module_entry opentelemetry_module_entry = {
+zend_module_entry phook_module_entry = {
     STANDARD_MODULE_HEADER,
-    "opentelemetry",
+    "phook",
     ext_functions,
-    PHP_MINIT(opentelemetry),
-    PHP_MSHUTDOWN(opentelemetry),
-    PHP_RINIT(opentelemetry),
-    PHP_RSHUTDOWN(opentelemetry),
-    PHP_MINFO(opentelemetry),
-    PHP_OPENTELEMETRY_VERSION,
-    PHP_MODULE_GLOBALS(opentelemetry),
-    PHP_GINIT(opentelemetry),
+    PHP_MINIT(phook),
+    PHP_MSHUTDOWN(phook),
+    PHP_RINIT(phook),
+    PHP_RSHUTDOWN(phook),
+    PHP_MINFO(phook),
+    PHP_PHOOK_VERSION,
+    PHP_MODULE_GLOBALS(phook),
+    PHP_GINIT(phook),
     NULL,
     NULL,
     STANDARD_MODULE_PROPERTIES_EX,
 };
 
-#ifdef COMPILE_DL_OPENTELEMETRY
+#ifdef COMPILE_DL_PHOOK
 #ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
 #endif
-ZEND_GET_MODULE(opentelemetry)
+ZEND_GET_MODULE(phook)
 #endif

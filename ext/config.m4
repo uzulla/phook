@@ -1,24 +1,24 @@
-dnl config.m4 for extension opentelemetry
+dnl config.m4 for extension phook
 
 dnl Comments in this file start with the string 'dnl'.
 dnl Remove where necessary.
 
 dnl If your extension references something external, use 'with':
 
-dnl PHP_ARG_WITH([opentelemetry],
-dnl   [for opentelemetry support],
-dnl   [AS_HELP_STRING([--with-opentelemetry],
-dnl     [Include opentelemetry support])])
+dnl PHP_ARG_WITH([phook],
+dnl   [for phook support],
+dnl   [AS_HELP_STRING([--with-phook],
+dnl     [Include phook support])])
 
 dnl Otherwise use 'enable':
 
-PHP_ARG_ENABLE([opentelemetry],
-  [whether to enable opentelemetry support],
-  [AS_HELP_STRING([--enable-opentelemetry],
-    [Enable opentelemetry support])],
+PHP_ARG_ENABLE([phook],
+  [whether to enable phook support],
+  [AS_HELP_STRING([--enable-phook],
+    [Enable phook support])],
   [no])
 
-if test "$PHP_OPENTELEMETRY" != "no"; then
+if test "$PHP_PHOOK" != "no"; then
   dnl Write more examples of tests here...
 
   dnl Remove this code block if the library does not support pkg-config.
@@ -88,7 +88,7 @@ if test "$PHP_OPENTELEMETRY" != "no"; then
   dnl PHP_SUBST(OPENTELEMETRY_SHARED_LIBADD)
 
   dnl In case of no dependencies
-  AC_DEFINE(HAVE_OPENTELEMETRY, 1, [ Have opentelemetry support ])
+  AC_DEFINE(HAVE_PHOOK, 1, [ Have phook support ])
 
-  PHP_NEW_EXTENSION(opentelemetry, opentelemetry.c otel_observer.c, $ext_shared,, "-Wall -Wextra -Werror -Wno-unused-parameter")
+  PHP_NEW_EXTENSION(phook, phook.c phook_observer.c, $ext_shared,, "-Wall -Wextra -Werror -Wno-unused-parameter")
 fi
