@@ -529,7 +529,7 @@ static void arg_locator_initialize(phook_arg_locator *arg_locator,
     }
 }
 
-static zval *arg_locator_get_slot(otel_arg_locator *arg_locator, uint32_t index,
+static zval *arg_locator_get_slot(phook_arg_locator *arg_locator, uint32_t index,
                                   const char **failure_reason) {
 
     if (index < arg_locator->reserved) {
@@ -567,7 +567,7 @@ static zval *arg_locator_get_slot(otel_arg_locator *arg_locator, uint32_t index,
     return NULL;
 }
 
-static void arg_locator_store_extended(otel_arg_locator *arg_locator) {
+static void arg_locator_store_extended(phook_arg_locator *arg_locator) {
     if (arg_locator->extended_used == 0) {
         return;
     }
