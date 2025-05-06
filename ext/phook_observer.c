@@ -322,7 +322,7 @@ static inline void func_get_lineno(zval *zv, zend_execute_data *ex) {
 
 static inline void func_get_attribute_args(zval *zv, HashTable *attributes,
                                            zend_execute_data *ex) {
-    if (!OTEL_G(attr_hooks_enabled)) {
+    if (!PHOOK_G(attr_hooks_enabled)) {
         ZVAL_EMPTY_ARRAY(zv);
         return;
     }
@@ -381,7 +381,7 @@ bool is_object_compatible_with_type_hint(zval *object_zval,
  */
 static inline bool is_valid_signature(zend_fcall_info fci,
                                       zend_fcall_info_cache fcc) {
-    if (OTEL_G(validate_hook_functions) == 0) {
+    if (PHOOK_G(validate_hook_functions) == 0) {
         return 1;
     }
     zend_function *func = fcc.function_handler;
@@ -417,7 +417,7 @@ static inline bool is_valid_signature(zend_fcall_info fci,
     return true;
 }
 
-static void exception_isolation_start(otel_exception_state *save_state) {
+static void exception_isolation_start(phook_exception_state *save_state) {
     save_state->exception = EG(exception);
     save_state->prev_exception = EG(prev_exception);
     save_state->opline_before_exception = EG(opline_before_exception);
@@ -440,7 +440,7 @@ static void exception_isolation_start(otel_exception_state *save_state) {
     }
 }
 
-static zend_object *exception_isolation_end(otel_exception_state *save_state) {
+static zend_object *exception_isolation_end(phook_exception_state *save_state) {
     zend_object *suppressed = EG(exception);
     // NULL this before call to zend_clear_exception, as it would try to jump
     // to exception handler then.
@@ -483,7 +483,7 @@ static void exception_isolation_handle_exception(zend_object *suppressed,
                               ZSTR_KNOWN(ZEND_STR_MESSAGE), 1, &return_value);
 
     php_error_docref(NULL, E_CORE_WARNING,
-                     "OpenTelemetry: %s threw exception,"
+                     "Phook: %s threw exception,"
                      " class=%s function=%s message=%s",
                      type, zval_get_chars(class_name),
                      zval_get_chars(function_name), zval_get_chars(message));
@@ -495,7 +495,7 @@ static void exception_isolation_handle_exception(zend_object *suppressed,
     OBJ_RELEASE(suppressed);
 }
 
-static void arg_locator_initialize(otel_arg_locator *arg_locator,
+static void arg_locator_initialize(phook_arg_locator *arg_locator,
                                    zend_execute_data *execute_data) {
     arg_locator->execute_data = execute_data;
 
@@ -517,7 +517,7 @@ static void arg_locator_initialize(otel_arg_locator *arg_locator,
                                       ? arg_locator->provided
                                       : arg_locator->reserved;
 
-    if (OTEL_G(allow_stack_extension)) {
+    if (PHOOK_G(allow_stack_extension)) {
         arg_locator->extended_max = STACK_EXTENSION_LIMIT;
 
         size_t slots_left_in_stack = EG(vm_stack_end) - EG(vm_stack_top);
@@ -817,7 +817,7 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
 
         if (!is_valid_signature(fci, fcc)) {
             php_error_docref(NULL, E_CORE_WARNING,
-                             "OpenTelemetry: post hook invalid signature, "
+                             "Phook: post hook invalid signature, "
                              "class=%s function=%s",
                              (Z_TYPE_P(&params[4]) == IS_NULL)
                                  ? "null"
@@ -826,7 +826,7 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
             continue;
         }
 
-        otel_exception_state save_state;
+        phook_exception_state save_state;
         exception_isolation_start(&save_state);
 
         if (zend_call_function(&fci, &fcc) == SUCCESS) {
@@ -862,7 +862,7 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
 }
 
 static void observer_begin_handler(zend_execute_data *execute_data) {
-    otel_observer *observer = ZEND_OP_ARRAY_EXTENSION(
+    phook_observer *observer = ZEND_OP_ARRAY_EXTENSION(
         &execute_data->func->op_array, op_array_extension);
     if (!observer || !zend_llist_count(&observer->pre_hooks)) {
         return;
@@ -873,7 +873,7 @@ static void observer_begin_handler(zend_execute_data *execute_data) {
 
 static void observer_end_handler(zend_execute_data *execute_data,
                                  zval *retval) {
-    otel_observer *observer = ZEND_OP_ARRAY_EXTENSION(
+    phook_observer *observer = ZEND_OP_ARRAY_EXTENSION(
         &execute_data->func->op_array, op_array_extension);
     if (!observer || !zend_llist_count(&observer->post_hooks)) {
         return;
@@ -882,33 +882,33 @@ static void observer_end_handler(zend_execute_data *execute_data,
     observer_end(execute_data, retval, &observer->post_hooks);
 }
 
-static void free_observer(otel_observer *observer) {
+static void free_observer(phook_observer *observer) {
     zend_llist_destroy(&observer->pre_hooks);
     zend_llist_destroy(&observer->post_hooks);
     efree(observer);
 }
 
-static void init_observer(otel_observer *observer) {
+static void init_observer(phook_observer *observer) {
     zend_llist_init(&observer->pre_hooks, sizeof(zval),
                     (llist_dtor_func_t)zval_ptr_dtor, 0);
     zend_llist_init(&observer->post_hooks, sizeof(zval),
                     (llist_dtor_func_t)zval_ptr_dtor, 0);
 }
 
-static otel_observer *create_observer() {
-    otel_observer *observer = emalloc(sizeof(otel_observer));
+static phook_observer *create_observer() {
+    phook_observer *observer = emalloc(sizeof(phook_observer));
     init_observer(observer);
     return observer;
 }
 
-static void copy_observer(otel_observer *source, otel_observer *destination) {
+static void copy_observer(phook_observer *source, phook_observer *destination) {
     destination->pre_hooks = source->pre_hooks;
     destination->post_hooks = source->post_hooks;
 }
 
 static bool find_observers(HashTable *ht, zend_string *n, zend_llist *pre_hooks,
                            zend_llist *post_hooks) {
-    otel_observer *observer = zend_hash_find_ptr_lc(ht, n);
+    phook_observer *observer = zend_hash_find_ptr_lc(ht, n);
     if (observer) {
         for (zend_llist_element *element = observer->pre_hooks.head; element;
              element = element->next) {
@@ -968,44 +968,44 @@ static zval create_attribute_observer_handler(char *fn) {
     return callable;
 }
 
-static otel_observer *resolve_observer(zend_execute_data *execute_data) {
+static phook_observer *resolve_observer(zend_execute_data *execute_data) {
     zend_function *fbc = execute_data->func;
     if (!fbc->common.function_name) {
         return NULL;
     }
     bool has_withspan_attribute = func_has_withspan_attribute(execute_data);
 
-    if (OTEL_G(attr_hooks_enabled) == false && has_withspan_attribute &&
-        OTEL_G(display_warnings)) {
+    if (PHOOK_G(attr_hooks_enabled) == false && has_withspan_attribute &&
+        PHOOK_G(display_warnings)) {
         php_error_docref(NULL, E_CORE_WARNING,
-                         "OpenTelemetry: WithSpan attribute found but "
+                         "Phook: WithSpan attribute found but "
                          "attribute hooks disabled");
     }
 
-    otel_observer observer_instance;
+    phook_observer observer_instance;
     init_observer(&observer_instance);
 
     if (fbc->op_array.scope) {
-        find_method_observers(OTEL_G(observer_class_lookup),
+        find_method_observers(PHOOK_G(observer_class_lookup),
                               fbc->op_array.scope, fbc->common.function_name,
                               &observer_instance.pre_hooks,
                               &observer_instance.post_hooks);
     } else {
-        find_observers(OTEL_G(observer_function_lookup),
+        find_observers(PHOOK_G(observer_function_lookup),
                        fbc->common.function_name, &observer_instance.pre_hooks,
                        &observer_instance.post_hooks);
     }
 
     if (!zend_llist_count(&observer_instance.pre_hooks) &&
         !zend_llist_count(&observer_instance.post_hooks)) {
-        if (OTEL_G(attr_hooks_enabled) && has_withspan_attribute) {
+        if (PHOOK_G(attr_hooks_enabled) && has_withspan_attribute) {
             // there are no observers registered for this function/method, but
             // it has a WithSpan attribute. Add configured attribute-based
             // pre/post handlers as new observers.
             zval pre = create_attribute_observer_handler(
-                OTEL_G(pre_handler_function_fqn));
+                PHOOK_G(pre_handler_function_fqn));
             zval post = create_attribute_observer_handler(
-                OTEL_G(post_handler_function_fqn));
+                PHOOK_G(post_handler_function_fqn));
             add_observer(fbc->op_array.scope ? fbc->op_array.scope->name : NULL,
                          fbc->common.function_name, &pre, &post);
             zval_ptr_dtor(&pre);
@@ -1013,11 +1013,11 @@ static otel_observer *resolve_observer(zend_execute_data *execute_data) {
             // re-find to update pre/post hooks
             if (fbc->op_array.scope) {
                 find_method_observers(
-                    OTEL_G(observer_class_lookup), fbc->op_array.scope,
+                    PHOOK_G(observer_class_lookup), fbc->op_array.scope,
                     fbc->common.function_name, &observer_instance.pre_hooks,
                     &observer_instance.post_hooks);
             } else {
-                find_observers(OTEL_G(observer_function_lookup),
+                find_observers(PHOOK_G(observer_function_lookup),
                                fbc->common.function_name,
                                &observer_instance.pre_hooks,
                                &observer_instance.post_hooks);
@@ -1032,9 +1032,9 @@ static otel_observer *resolve_observer(zend_execute_data *execute_data) {
             return NULL;
         }
     }
-    otel_observer *observer = create_observer();
+    phook_observer *observer = create_observer();
     copy_observer(&observer_instance, observer);
-    zend_hash_next_index_insert_ptr(OTEL_G(observer_aggregates), observer);
+    zend_hash_next_index_insert_ptr(PHOOK_G(observer_aggregates), observer);
 
     return observer;
 }
@@ -1046,7 +1046,7 @@ observer_fcall_init(zend_execute_data *execute_data) {
     // loaded before this one invokes PHP functions in its RINIT. The latter
     // can happen if a header callback is set or when another extension invokes
     // PHP functions in their RSHUTDOWN.
-    if (OTEL_G(observer_class_lookup) == NULL) {
+    if (PHOOK_G(observer_class_lookup) == NULL) {
         return (zend_observer_fcall_handlers){NULL, NULL};
     }
 
@@ -1054,7 +1054,7 @@ observer_fcall_init(zend_execute_data *execute_data) {
         return (zend_observer_fcall_handlers){NULL, NULL};
     }
 
-    otel_observer *observer = resolve_observer(execute_data);
+    phook_observer *observer = resolve_observer(execute_data);
     if (!observer) {
         return (zend_observer_fcall_handlers){NULL, NULL};
     }
@@ -1078,7 +1078,7 @@ static void destroy_observer_class_lookup(zval *zv) {
 static void add_function_observer(HashTable *ht, zend_string *fn,
                                   zval *pre_hook, zval *post_hook) {
     zend_string *lc = zend_string_tolower(fn);
-    otel_observer *observer = zend_hash_find_ptr(ht, lc);
+    phook_observer *observer = zend_hash_find_ptr(ht, lc);
     if (!observer) {
         observer = create_observer();
         zend_hash_update_ptr(ht, lc, observer);
