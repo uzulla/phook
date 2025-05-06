@@ -556,9 +556,9 @@ static zval *arg_locator_get_slot(phook_arg_locator *arg_locator, uint32_t index
         // the stack each time a new argument is discovered
         if (extended_index >= STACK_EXTENSION_LIMIT) {
             *failure_reason = "exceeds built-in stack extension limit";
-        } else if (!OTEL_G(allow_stack_extension)) {
+        } else if (!PHOOK_G(allow_stack_extension)) {
             *failure_reason = "stack extension must be enabled with "
-                              "opentelemetry.allow_stack_extension option";
+                              "phook.allow_stack_extension option";
         } else {
             *failure_reason = "not enough room left in stack page";
         }
