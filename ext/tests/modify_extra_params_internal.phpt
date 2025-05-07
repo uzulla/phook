@@ -10,7 +10,7 @@ does not crash.
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'array_slice',
     pre: function(null $instance, array $params) {

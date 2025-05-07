@@ -7,7 +7,7 @@ are caused by changing the same parameter in two different ways at once.
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'hello',
     function($obj, array $params) {

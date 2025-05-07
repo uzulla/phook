@@ -20,7 +20,7 @@ function otel_attr_test(): void
   var_dump('test');
 }
 
-$reflection = new \ReflectionFunction('OpenTelemetry\API\Instrumentation\otel_attr_test');
+$reflection = new \ReflectionFunction('Phook\otel_attr_test');
 var_dump($reflection->getAttributes()[0]->getName() == WithSpan::class);
 
 otel_attr_test();

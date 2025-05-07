@@ -6,7 +6,7 @@ Check if pre hook can modify named params of internal function
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'array_slice',
     pre: function(null $instance, array $params) {

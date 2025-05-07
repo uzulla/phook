@@ -8,7 +8,7 @@ phook.attr_pre_handler_function = "Invalid::pre"
 phook.attr_post_handler_function = "Also\Invalid::post"
 --FILE--
 <?php
-use OpenTelemetry\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 #[WithSpan]
 function foo(): void

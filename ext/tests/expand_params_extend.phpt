@@ -6,7 +6,7 @@ phook
 phook.allow_stack_extension=On
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {

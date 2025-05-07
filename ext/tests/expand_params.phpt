@@ -4,7 +4,7 @@ Check if pre hook can expand params of function if they are part of function def
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {

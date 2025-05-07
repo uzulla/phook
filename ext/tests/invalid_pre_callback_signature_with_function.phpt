@@ -8,7 +8,7 @@ null class.
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'hello',
     static function (array $params, string $class, string $function, ?string $filename, ?int $lineno) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 use Attribute;
 

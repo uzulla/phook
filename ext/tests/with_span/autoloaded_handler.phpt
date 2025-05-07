@@ -37,7 +37,7 @@ $c = new TestClass();
 $c->sayFoo();
 ?>
 --EXPECT--
-string(62) "autoloading: OpenTelemetry\API\Instrumentation\WithSpanHandler"
+string(29) "autoloading: Phook\WithSpanHandler"
 string(3) "pre"
 string(3) "foo"
 string(4) "post"

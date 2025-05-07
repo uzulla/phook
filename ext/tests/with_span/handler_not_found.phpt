@@ -27,7 +27,7 @@ $c->sayFoo();
 ?>
 --EXPECTF--
 
-Warning: OpenTelemetry\API\Instrumentation\TestClass::sayFoo(): Failed to initialize pre hook callable in %s
+Warning: Phook\TestClass::sayFoo(): Failed to initialize pre hook callable in %s
 string(3) "foo"
 
-Warning: OpenTelemetry\API\Instrumentation\TestClass::sayFoo(): Failed to initialize post hook callable in %s
+Warning: Phook\TestClass::sayFoo(): Failed to initialize post hook callable in %s

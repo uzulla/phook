@@ -8,7 +8,7 @@ adding new ones is attempted and that it does not crash.
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {

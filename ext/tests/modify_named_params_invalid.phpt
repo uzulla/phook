@@ -4,7 +4,7 @@ Check if pre hook can try to modify invalid named params of function
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'hello',
     function($obj, array $params) {

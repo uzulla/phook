@@ -12,7 +12,7 @@ phook
 phook.allow_stack_extension=On
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'array_slice',
     pre: function(null $instance, array $params) {

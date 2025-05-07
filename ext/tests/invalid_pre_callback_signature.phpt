@@ -7,7 +7,7 @@ is invalid, the callback will not be called and a message will be written to err
 phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     'TestClass',
     'test',
     static function (array $params, string $class, string $function, ?string $filename, ?int $lineno) {
