@@ -1,10 +1,10 @@
 --TEST--
 Check if hooks receives arguments and return value
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', fn() => var_dump(func_get_args()), fn() => var_dump(func_get_args()));
+\Phook\hook(null, 'helloWorld', fn() => var_dump(func_get_args()), fn() => var_dump(func_get_args()));
 
 function helloWorld(string $a) {
     return 42;

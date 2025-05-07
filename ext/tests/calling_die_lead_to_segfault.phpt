@@ -1,12 +1,12 @@
 --TEST--
 Check if calling die or exit will finish gracefully
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 
 <?php
 
-use function OpenTelemetry\Instrumentation\hook;
+use function Phook\hook;
 
 class TestClass {
     public static function countFunction(): void

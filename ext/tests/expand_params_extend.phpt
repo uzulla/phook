@@ -1,12 +1,12 @@
 --TEST--
 Check if pre hook can expand params of function when that requires extending the stack
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.allow_stack_extension=On
+phook.allow_stack_extension=On
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {

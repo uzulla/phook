@@ -1,12 +1,12 @@
 --TEST--
 Check if pre hook can expand params of function when that requires extending the stack only until hardcoded limit
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.allow_stack_extension=On
+phook.allow_stack_extension=On
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {
@@ -21,7 +21,7 @@ function helloWorld($a, $b) {
 helloWorld('a');
 ?>
 --EXPECTF--
-Warning: helloWorld(): OpenTelemetry: pre hook invalid argument index 18 - exceeds built-in stack extension limit, class=null function=helloWorld in %s
+Warning: helloWorld(): Phook: pre hook invalid argument index 18 - exceeds built-in stack extension limit, class=null function=helloWorld in %s
 array(18) {
   [0]=>
   string(1) "a"

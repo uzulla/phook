@@ -3,16 +3,16 @@ Check if custom attribute can be applied to an interface
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80100) die('skip requires PHP >= 8.1'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.attr_hooks_enabled = On
+phook.attr_hooks_enabled = On
 --FILE--
 <?php
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
 include dirname(__DIR__) . '/mocks/WithSpanHandler.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 interface TestInterface
 {

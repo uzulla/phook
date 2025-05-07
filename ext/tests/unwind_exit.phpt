@@ -1,12 +1,12 @@
 --TEST--
 Test UnwindExit from die/exit is not exposed to userland code
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 
 <?php
 
-use function OpenTelemetry\Instrumentation\hook;
+use function Phook\hook;
 
 class TestClass {
     public static function run(): void

@@ -1,10 +1,10 @@
 --TEST--
 Check if pre hook can expand params of function if they are part of function definition
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {

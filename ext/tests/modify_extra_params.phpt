@@ -5,10 +5,10 @@ Extra parameters for user functions are parameters that were provided at call si
 declaration. It is important to test how these are handled because they are stored differently in memory and it should
 be checked that the extension handles them correctly.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'helloWorld',
     pre: function($instance, array $params) {

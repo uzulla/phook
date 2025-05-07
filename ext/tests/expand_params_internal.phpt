@@ -8,10 +8,10 @@ it is what causes the segfault.
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80200) die('skip requires PHP >= 8.2'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'array_slice',
     pre: function(null $instance, array $params) {
@@ -23,7 +23,7 @@ OpenTelemetry\Instrumentation\hook(
 var_dump(array_slice([1,2,3], 1));
 ?>
 --EXPECTF--
-Warning: array_slice(): OpenTelemetry: pre hook invalid argument index 2 - stack extension must be enabled with opentelemetry.allow_stack_extension option, class=null function=array_slice in %s
+Warning: array_slice(): Phook: pre hook invalid argument index 2 - stack extension must be enabled with phook.allow_stack_extension option, class=null function=array_slice in %s
 array(2) {
   [0]=>
   int(2)

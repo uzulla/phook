@@ -7,10 +7,10 @@ does not crash.
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80200) die('skip requires PHP >= 8.2'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'array_slice',
     pre: function(null $instance, array $params) {

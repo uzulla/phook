@@ -1,10 +1,10 @@
 --TEST--
 Check if pre hook can replace arguments
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', fn() => ['b']);
+\Phook\hook(null, 'helloWorld', fn() => ['b']);
 
 function helloWorld($a) {
     var_dump($a);

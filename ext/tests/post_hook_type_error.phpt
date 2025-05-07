@@ -1,7 +1,7 @@
 --TEST--
 Check if type error in post hook is handled
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 class Foo
@@ -12,7 +12,7 @@ class Foo
   }
 }
 
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     Foo::class,
     'bar',
     fn() => var_dump('pre'),
@@ -24,5 +24,5 @@ var_dump('baz');
 string(3) "pre"
 string(3) "bar"
 
-Warning: Foo::bar(): OpenTelemetry: post hook threw exception, class=Foo function=bar message=%sArgument #1 ($scope) must be of type string, Foo given%s
+Warning: Foo::bar(): Phook: post hook threw exception, class=Foo function=bar message=%sArgument #1 ($scope) must be of type string, Foo given%s
 string(3) "baz"

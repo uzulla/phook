@@ -1,10 +1,10 @@
 --TEST--
 Check if post hook return value is ignored if return typehint not supplied
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', post: fn(mixed $object, array $params, string $return) => 'ignored');
+\Phook\hook(null, 'helloWorld', post: fn(mixed $object, array $params, string $return) => 'ignored');
 
 function helloWorld(string $val) {
     return $val;

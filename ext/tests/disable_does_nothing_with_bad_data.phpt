@@ -1,12 +1,12 @@
 --TEST--
-Check if opentelemetry disable ignores bad input
+Check if phook disable ignores bad input
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.conflicts=,
+phook.conflicts=,
 --FILE--
 <?php
-var_dump(extension_loaded('opentelemetry'));
+var_dump(extension_loaded('phook'));
 ?>
 --EXPECTF--
 bool(true)

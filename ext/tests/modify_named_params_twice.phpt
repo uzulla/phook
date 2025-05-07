@@ -4,10 +4,10 @@ Check if pre hook can modify same param via name and index at once
 Tests that the last entry for the same param (either by name or index) is applied, and that no crashes or memory leaks
 are caused by changing the same parameter in two different ways at once.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'hello',
     function($obj, array $params) {

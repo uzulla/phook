@@ -3,15 +3,15 @@ Check if WithSpan handlers can be changed via config
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80100) die('skip requires PHP >= 8.1'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.attr_hooks_enabled = On
-opentelemetry.attr_pre_handler_function = custom_pre
-opentelemetry.attr_post_handler_function = custom_post
+phook.attr_hooks_enabled = On
+phook.attr_pre_handler_function = custom_pre
+phook.attr_post_handler_function = custom_post
 --FILE--
 <?php
 include dirname(__DIR__) . '/mocks/WithSpan.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 function custom_pre(): void
 {
@@ -29,8 +29,8 @@ function foo(): void
   var_dump('test');
 }
 
-var_dump(ini_get('opentelemetry.attr_pre_handler_function'));
-var_dump(ini_get('opentelemetry.attr_post_handler_function'));
+var_dump(ini_get('phook.attr_pre_handler_function'));
+var_dump(ini_get('phook.attr_post_handler_function'));
 foo();
 ?>
 --EXPECT--

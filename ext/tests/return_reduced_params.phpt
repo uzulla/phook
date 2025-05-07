@@ -1,10 +1,10 @@
 --TEST--
 Check if pre hook can reduce then return $params
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', function($obj, array $params) {
+\Phook\hook(null, 'helloWorld', function($obj, array $params) {
     $params[1] = null;
     return $params;
 });

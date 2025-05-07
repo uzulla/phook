@@ -1,10 +1,10 @@
 --TEST--
 Check if post hook receives exception
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'helloWorld',
     null,

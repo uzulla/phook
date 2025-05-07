@@ -4,7 +4,7 @@ Check if post hook can returned modified clone
 A different object might be returned than the one provided to post hook. For example, PSR-7 messages are immutable and modifying
 one creates a new instance.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
 class Foo
@@ -23,7 +23,7 @@ class Foo
     }
 }
 
-\OpenTelemetry\Instrumentation\hook(null, 'getFoo', null, function($obj, array $params, Foo $foo): Foo {
+\Phook\hook(null, 'getFoo', null, function($obj, array $params, Foo $foo): Foo {
     return $foo->modify('b');
 });
 

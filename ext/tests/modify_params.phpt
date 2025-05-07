@@ -1,10 +1,10 @@
 --TEST--
 Check if pre hook can modify params of function
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'hello',
      function($obj, array $params) {

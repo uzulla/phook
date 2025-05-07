@@ -1,10 +1,10 @@
 --TEST--
 Check if throwing an exception in post hook after IO operation will finish gracefully
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'helloWorld',
     fn() => var_dump('pre'),
@@ -25,4 +25,4 @@ helloWorld();
 --EXPECTF--
 string(3) "pre"
 
-Warning: helloWorld(): OpenTelemetry: post hook threw exception, class=null function=helloWorld message=error in %s
+Warning: helloWorld(): Phook: post hook threw exception, class=null function=helloWorld message=error in %s

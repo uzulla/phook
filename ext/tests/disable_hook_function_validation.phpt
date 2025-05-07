@@ -4,12 +4,12 @@ Disabling hook validation
 The post hook is invalid, because of the type-hint on $object. Runtime checking is disabled, so it is executed and
 causes a fatal runtime error.
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.validate_hook_functions=Off
+phook.validate_hook_functions=Off
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'hello', post: fn(\Exception $object, array $params, string $return): string => 'replaced');
+\Phook\hook(null, 'hello', post: fn(\Exception $object, array $params, string $return): string => 'replaced');
 
 function hello(int $val) {
     return $val;

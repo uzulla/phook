@@ -5,15 +5,15 @@ Check if hooking a method takes priority over WithSpan
 --DESCRIPTION--
 Attribute-based hooks are only applied if no other hooks are registered on a function or method.
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.attr_hooks_enabled = On
+phook.attr_hooks_enabled = On
 --FILE--
 <?php
-namespace OpenTelemetryAPI\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 class WithSpanHandler
 {
@@ -36,7 +36,7 @@ class Foo
     }
 }
 
-\OpenTelemetry\Instrumentation\hook(Foo::class, 'foo', function(){var_dump('pre');}, function(){var_dump('post');});
+\Phook\hook(Foo::class, 'foo', function(){var_dump('pre');}, function(){var_dump('post');});
 
 (new Foo())->foo();
 ?>

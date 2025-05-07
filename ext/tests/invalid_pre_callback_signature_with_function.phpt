@@ -5,10 +5,10 @@ The invalid callback signature should not cause a fatal, so it is checked before
 is invalid, the callback will not be called and a message will be written to error_log. Also tests logging handling of
 null class.
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-OpenTelemetry\Instrumentation\hook(
+Phook\hook(
     null,
     'hello',
     static function (array $params, string $class, string $function, ?string $filename, ?int $lineno) {
@@ -28,6 +28,6 @@ function hello(): void
 hello();
 ?>
 --EXPECTF--
-Warning: hello(): OpenTelemetry: pre hook invalid signature, class=null function=hello in %s on line %d
+Warning: hello(): Phook: pre hook invalid signature, class=null function=hello in %s on line %d
 string(5) "hello"
 string(4) "post"

@@ -1,10 +1,10 @@
 --TEST--
 Check if hooks receives function information
 --EXTENSIONS--
-opentelemetry
+phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', fn() => var_dump(func_get_args()), fn() => var_dump(func_get_args()));
+\Phook\hook(null, 'helloWorld', fn() => var_dump(func_get_args()), fn() => var_dump(func_get_args()));
 
 function helloWorld() {
     var_dump('CALL');

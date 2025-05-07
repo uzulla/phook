@@ -3,17 +3,17 @@ Check if attribute hooks can be disabled by config
 --SKIPIF--
 <?php if (PHP_VERSION_ID < 80100) die('skip requires PHP >= 8.1'); ?>
 --EXTENSIONS--
-opentelemetry
+phook
 --INI--
-opentelemetry.attr_hooks_enabled = Off
-opentelemetry.display_warnings = On
+phook.attr_hooks_enabled = Off
+phook.display_warnings = On
 --FILE--
 <?php
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
 
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 class WithSpanHandler
 {
@@ -36,5 +36,5 @@ function otel_attr_test(): void
 otel_attr_test();
 ?>
 --EXPECTF--
-Warning: %s: OpenTelemetry: WithSpan attribute found but attribute hooks disabled in Unknown on line %d
+Warning: %s: Phook: WithSpan attribute found but attribute hooks disabled in Unknown on line %d
 string(4) "test"
