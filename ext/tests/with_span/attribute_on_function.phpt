@@ -15,15 +15,15 @@ include dirname(__DIR__) . '/mocks/WithSpanHandler.php';
 use Phook\WithSpan;
 
 #[WithSpan]
-function otel_attr_test(): void
+function phook_attr_test(): void
 {
   var_dump('test');
 }
 
-$reflection = new \ReflectionFunction('Phook\otel_attr_test');
+$reflection = new \ReflectionFunction('Phook\phook_attr_test');
 var_dump($reflection->getAttributes()[0]->getName() == WithSpan::class);
 
-otel_attr_test();
+phook_attr_test();
 ?>
 --EXPECT--
 bool(true)

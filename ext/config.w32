@@ -1,9 +1,9 @@
 // vim:ft=javascript
 
-ARG_ENABLE('opentelemetry', 'opentelemetry support', 'no');
+ARG_ENABLE('phook', 'phook support', 'no');
 
-if (PHP_OPENTELEMETRY != 'no') {
-    AC_DEFINE('HAVE_OPENTELEMETRY', 1, 'opentelemetry support enabled');
+if (PHP_PHOOK != 'no') {
+    AC_DEFINE('HAVE_PHOOK', 1, 'phook support enabled');
 
-    EXTENSION('opentelemetry', 'opentelemetry.c otel_observer.c', PHP_OPENTELEMETRY_SHARED, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+    EXTENSION('phook', 'phook.c phook_observer.c', PHP_PHOOK_SHARED, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
 }

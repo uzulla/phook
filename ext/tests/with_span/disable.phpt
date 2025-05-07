@@ -28,12 +28,12 @@ class WithSpanHandler
 }
 
 #[WithSpan]
-function otel_attr_test(): void
+function phook_attr_test(): void
 {
   var_dump('test');
 }
 
-otel_attr_test();
+phook_attr_test();
 ?>
 --EXPECTF--
 Warning: %s: Phook: WithSpan attribute found but attribute hooks disabled in Unknown on line %d
