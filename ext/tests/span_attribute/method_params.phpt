@@ -14,7 +14,7 @@ include dirname(__DIR__) . '/mocks/WithSpan.php';
 include dirname(__DIR__) . '/mocks/WithSpanHandlerDumpAttributes.php';
 include dirname(__DIR__) . '/mocks/SpanAttribute.php';
 use Phook\WithSpan;
-use OpenTelemetry\API\Instrumentation\SpanAttribute;
+use Phook\SpanAttribute;
 
 class TestClass
 {
