@@ -11,6 +11,6 @@ ZEND_END_ARG_INFO()
 ZEND_FUNCTION(Phook_hook);
 
 static const zend_function_entry ext_functions[] = {
-	{"Phook\\hook", zif_Phook_hook, arginfo_Phook_hook, 0, 0, NULL, NULL},
+	{"Phook\\hook", zif_Phook_hook, arginfo_Phook_hook, 0, 0},
 	ZEND_FE_END
 };
