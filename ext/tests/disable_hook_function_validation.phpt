@@ -9,7 +9,7 @@ phook
 phook.validate_hook_functions=Off
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'hello', post: fn(\Exception $object, array $params, string $return): string => 'replaced');
+\Phook\hook(null, 'hello', post: fn(\Exception $object, array $params, string $return): string => 'replaced');
 
 function hello(int $val) {
     return $val;

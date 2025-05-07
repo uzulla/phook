@@ -6,7 +6,7 @@ Check if hooks are invoked for internal functions
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'array_map', fn() => var_dump('PRE'), fn() => var_dump('POST'));
+\Phook\hook(null, 'array_map', fn() => var_dump('PRE'), fn() => var_dump('POST'));
 
 array_map(var_dump(...), ['HELLO']);
 ?>

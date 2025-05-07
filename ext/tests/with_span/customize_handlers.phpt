@@ -11,7 +11,7 @@ phook.attr_post_handler_function = custom_post
 --FILE--
 <?php
 include dirname(__DIR__) . '/mocks/WithSpan.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 function custom_pre(): void
 {

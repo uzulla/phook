@@ -4,7 +4,7 @@ Check if hook returns true
 phook
 --FILE--
 <?php
-$ret = \OpenTelemetry\Instrumentation\hook(null, 'some_function');
+$ret = \Phook\hook(null, 'some_function');
 
 var_dump($ret);
 ?>

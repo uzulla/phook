@@ -10,8 +10,8 @@ phook.attr_hooks_enabled = On
 <?php
 include dirname(__DIR__) . '/mocks/WithSpan.php';
 
-use OpenTelemetry\API\Instrumentation\WithSpan;
-use OpenTelemetry\API\Instrumentation\WithSpanHandler;
+use Phook\WithSpan;
+use Phook\WithSpanHandler;
 
 function my_autoloader($class) {
     var_dump("autoloading: " . $class);

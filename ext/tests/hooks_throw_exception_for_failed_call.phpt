@@ -7,7 +7,7 @@ phook
 function helloWorld($argument) {
     var_dump('inside');
 }
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'helloWorld',
     pre: static function () : void {

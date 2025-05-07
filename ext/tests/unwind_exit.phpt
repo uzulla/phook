@@ -6,7 +6,7 @@ phook
 
 <?php
 
-use function OpenTelemetry\Instrumentation\hook;
+use function Phook\hook;
 
 class TestClass {
     public static function run(): void

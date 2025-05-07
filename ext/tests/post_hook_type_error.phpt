@@ -12,7 +12,7 @@ class Foo
   }
 }
 
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     Foo::class,
     'bar',
     fn() => var_dump('pre'),

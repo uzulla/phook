@@ -4,7 +4,7 @@ Check if hooks are invoked for closures
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', fn() => var_dump('PRE'), fn() => var_dump('POST'));
+\Phook\hook(null, 'helloWorld', fn() => var_dump('PRE'), fn() => var_dump('POST'));
 
 function helloWorld() {
     var_dump('HELLO');

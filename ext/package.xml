@@ -131,7 +131,7 @@
       </pearinstaller>
     </required>
   </dependencies>
-  <providesextension>opentelemetry</providesextension>
+  <providesextension>phook</providesextension>
   <extsrcrelease/>
   <changelog>
     <release>

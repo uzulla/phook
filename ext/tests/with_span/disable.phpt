@@ -9,11 +9,11 @@ phook.attr_hooks_enabled = Off
 phook.display_warnings = On
 --FILE--
 <?php
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
 
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 class WithSpanHandler
 {

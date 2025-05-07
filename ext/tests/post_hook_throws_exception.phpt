@@ -4,7 +4,7 @@ Check if throwing an exception in post hook after IO operation will finish grace
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'helloWorld',
     fn() => var_dump('pre'),

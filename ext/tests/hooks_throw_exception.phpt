@@ -4,7 +4,7 @@ Check if exceptions thrown in hooks are isolated and logged
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'helloWorld', pre: fn() => throw new Exception('thrown in pre'), post: fn() => throw new Exception('thrown in post'));
+\Phook\hook(null, 'helloWorld', pre: fn() => throw new Exception('thrown in pre'), post: fn() => throw new Exception('thrown in post'));
 
 function helloWorld() {
     var_dump('function');

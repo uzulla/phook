@@ -4,7 +4,7 @@ Check hooking static class methods provides class name as 1st param
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     Demo::class,
     'hello',
     function($class) {

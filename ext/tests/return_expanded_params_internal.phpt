@@ -8,7 +8,7 @@ The existence of a post callback is part of the failure preconditions.
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'array_slice',
     pre: function($obj, array $params) {

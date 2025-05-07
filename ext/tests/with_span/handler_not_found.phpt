@@ -8,10 +8,10 @@ phook
 phook.attr_hooks_enabled = On
 --FILE--
 <?php
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 class TestClass
 {

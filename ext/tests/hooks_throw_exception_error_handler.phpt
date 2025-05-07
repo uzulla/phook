@@ -13,7 +13,7 @@ set_error_handler(function (int $errno, string $message) {
 function helloWorld() {
     throw new \Error('test');
 }
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'helloWorld',
     pre: static function () : void {

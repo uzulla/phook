@@ -8,11 +8,11 @@ phook
 phook.attr_hooks_enabled = On
 --FILE--
 <?php
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
 include dirname(__DIR__) . '/mocks/WithSpanHandler.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 #[WithSpan]
 function otel_attr_test(): void

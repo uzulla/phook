@@ -1,5 +1,5 @@
 --TEST--
-Check if process exits gracefully after using ini_set with an opentelemetry option
+Check if process exits gracefully after using ini_set with a phook option
 --EXTENSIONS--
 phook
 --FILE--

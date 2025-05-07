@@ -4,7 +4,7 @@ Check if post hook receives exception
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(
+\Phook\hook(
     null,
     'helloWorld',
     null,

@@ -6,7 +6,7 @@ Check if pre hook can return $params for internal function
 phook
 --FILE--
 <?php
-\OpenTelemetry\Instrumentation\hook(null, 'array_map', fn($obj, array $params) => $params);
+\Phook\hook(null, 'array_map', fn($obj, array $params) => $params);
 
 array_map(var_dump(...), ['HELLO']);
 ?>

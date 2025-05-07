@@ -10,10 +10,10 @@ phook
 phook.attr_hooks_enabled = On
 --FILE--
 <?php
-namespace OpenTelemetryAPI\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 
 class WithSpanHandler
 {
@@ -36,7 +36,7 @@ class Foo
     }
 }
 
-\OpenTelemetry\Instrumentation\hook(Foo::class, 'foo', function(){var_dump('pre');}, function(){var_dump('post');});
+\Phook\hook(Foo::class, 'foo', function(){var_dump('pre');}, function(){var_dump('post');});
 
 (new Foo())->foo();
 ?>

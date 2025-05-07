@@ -8,12 +8,12 @@ phook
 phook.attr_hooks_enabled = On
 --FILE--
 <?php
-namespace OpenTelemetry\API\Instrumentation;
+namespace Phook;
 
 include dirname(__DIR__) . '/mocks/WithSpan.php';
 include dirname(__DIR__) . '/mocks/SpanAttribute.php';
 include dirname(__DIR__) . '/mocks/WithSpanHandlerDumpAttributes.php';
-use OpenTelemetry\API\Instrumentation\WithSpan;
+use Phook\WithSpan;
 use OpenTelemetry\API\Instrumentation\SpanAttribute;
 
 interface TestInterface

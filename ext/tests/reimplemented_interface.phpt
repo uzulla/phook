@@ -13,7 +13,7 @@ class C implements A, B {
     function m(): void {}
 }
 
-\OpenTelemetry\Instrumentation\hook(A::class, 'm', fn() => var_dump('PRE'), fn() => var_dump('POST'));
+\Phook\hook(A::class, 'm', fn() => var_dump('PRE'), fn() => var_dump('POST'));
 
 (new C)->m();
 ?>
