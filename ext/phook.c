@@ -114,9 +114,19 @@ PHP_FUNCTION(Phook_hook) {
         Z_PARAM_STR_OR_NULL(class_name)
         Z_PARAM_STR(function_name)
         Z_PARAM_OPTIONAL
-        Z_PARAM_OBJECT_OF_CLASS_OR_NULL(pre, zend_ce_closure)
-        Z_PARAM_OBJECT_OF_CLASS_OR_NULL(post, zend_ce_closure)
+        Z_PARAM_ZVAL_OR_NULL(pre)
+        Z_PARAM_ZVAL_OR_NULL(post)
     ZEND_PARSE_PARAMETERS_END();
+
+    if (pre != NULL && (Z_TYPE_P(pre) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(pre), zend_ce_closure))) {
+        php_error_docref(NULL, E_WARNING, "Phook: pre hook must be a Closure or NULL");
+        pre = NULL;
+    }
+
+    if (post != NULL && (Z_TYPE_P(post) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(post), zend_ce_closure))) {
+        php_error_docref(NULL, E_WARNING, "Phook: post hook must be a Closure or NULL");
+        post = NULL;
+    }
 
     if (pre != NULL) {
         zend_fcall_info fci = empty_fcall_info;
