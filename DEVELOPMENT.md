@@ -1,11 +1,9 @@
 # Setting up the build environment
 
-By default, an alpine and debian-based docker image with debug enabled is used.
+By default, a debian-based docker image with debug enabled is used.
 
 ```shell
 $ PHP_VERSION=x.y.z docker compose build debian
-# or
-$ PHP_VERSION=x.y.z docker compose build alpine
 ```
 
 You can add extra configure flags, but some may require extra dependencies to be installed.
@@ -13,7 +11,7 @@ You can add extra configure flags, but some may require extra dependencies to be
 You can also change the PHP version:
 
 ```shell
-$ docker compose build --build-arg PHP_CONFIG_OPTS="--enable-debug --enable-zts" --build-arg PHP_VERSION=8.0.23 [debian|alpine]
+$ docker compose build --build-arg PHP_CONFIG_OPTS="--enable-debug --enable-zts" --build-arg PHP_VERSION=8.0.23 debian
 ```
 
 The latest PHP version can be found on: https://www.php.net/releases/index.php
