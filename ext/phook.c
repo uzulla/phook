@@ -118,6 +118,56 @@ PHP_FUNCTION(Phook_hook) {
         Z_PARAM_OBJECT_OF_CLASS_OR_NULL(post, zend_ce_closure)
     ZEND_PARSE_PARAMETERS_END();
 
+    if (pre != NULL) {
+        zend_fcall_info fci = empty_fcall_info;
+        zend_fcall_info_cache fcc = empty_fcall_info_cache;
+        
+        if (zend_fcall_info_init(pre, 0, &fci, &fcc, NULL, NULL) == SUCCESS) {
+            zval params[8];
+            uint32_t param_count = 8;
+            
+            for (int i = 0; i < param_count; i++) {
+                ZVAL_NULL(&params[i]);
+            }
+            
+            fci.param_count = param_count;
+            fci.params = params;
+            
+            if (!is_valid_signature(fci, fcc)) {
+                php_error_docref(NULL, E_WARNING, 
+                    "Phook: pre hook invalid signature, class=%s function=%s",
+                    class_name ? ZSTR_VAL(class_name) : "null",
+                    ZSTR_VAL(function_name));
+                pre = NULL;
+            }
+        }
+    }
+    
+    if (post != NULL) {
+        zend_fcall_info fci = empty_fcall_info;
+        zend_fcall_info_cache fcc = empty_fcall_info_cache;
+        
+        if (zend_fcall_info_init(post, 0, &fci, &fcc, NULL, NULL) == SUCCESS) {
+            zval params[8];
+            uint32_t param_count = 8;
+            
+            for (int i = 0; i < param_count; i++) {
+                ZVAL_NULL(&params[i]);
+            }
+            
+            fci.param_count = param_count;
+            fci.params = params;
+            
+            if (!is_valid_signature(fci, fcc)) {
+                php_error_docref(NULL, E_WARNING, 
+                    "Phook: post hook invalid signature, class=%s function=%s",
+                    class_name ? ZSTR_VAL(class_name) : "null",
+                    ZSTR_VAL(function_name));
+                post = NULL;
+            }
+        }
+    }
+
     RETURN_BOOL(add_observer(class_name, function_name, pre, post));
 }
 
