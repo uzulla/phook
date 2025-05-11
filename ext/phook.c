@@ -126,7 +126,7 @@ PHP_FUNCTION(Phook_hook) {
             zval params[8];
             uint32_t param_count = 8;
             
-            for (int i = 0; i < param_count; i++) {
+            for (uint32_t i = 0; i < param_count; i++) {
                 ZVAL_NULL(&params[i]);
             }
             
@@ -151,7 +151,7 @@ PHP_FUNCTION(Phook_hook) {
             zval params[8];
             uint32_t param_count = 8;
             
-            for (int i = 0; i < param_count; i++) {
+            for (uint32_t i = 0; i < param_count; i++) {
                 ZVAL_NULL(&params[i]);
             }
             

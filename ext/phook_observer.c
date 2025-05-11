@@ -379,8 +379,8 @@ bool is_object_compatible_with_type_hint(zval *object_zval,
  * This is a runtime check, since some parameters are only known at runtime.
  * Can be disabled via the phook.validate_hook_functions ini value.
  */
-static inline bool is_valid_signature(zend_fcall_info fci,
-                                      zend_fcall_info_cache fcc) {
+bool is_valid_signature(zend_fcall_info fci,
+                                zend_fcall_info_cache fcc) {
     if (PHOOK_G(validate_hook_functions) == 0) {
         return 1;
     }
