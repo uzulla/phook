@@ -105,6 +105,29 @@ STD_PHP_INI_ENTRY("phook.attr_post_handler_function",
 PHP_INI_END()
 
 /**
+ * Ensures a hook is a Closure or NULL
+ * Returns the hook if valid, NULL otherwise
+ */
+static zval* ensure_closure_or_null(zval *hook, const char *hook_type, zend_string *class_name, zend_string *function_name) {
+    if (hook == NULL) {
+        return NULL;
+    }
+    
+    if (Z_TYPE_P(hook) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(hook), zend_ce_closure)) {
+        if (PHOOK_G(display_warnings)) {
+            php_error_docref(NULL, E_WARNING, 
+                "Phook: %s hook must be a Closure or NULL, class=%s function=%s",
+                hook_type,
+                class_name ? ZSTR_VAL(class_name) : "null",
+                ZSTR_VAL(function_name));
+        }
+        return NULL;
+    }
+    
+    return hook;
+}
+
+/**
  * Validates a hook callback and returns NULL if invalid
  * Uses dynamic allocation for params to avoid out-of-bounds access
  */
@@ -136,12 +159,14 @@ static zval* validate_hook(zval *hook, const char *hook_type, zend_string *class
         efree(params);
         
         if (!is_valid) {
-            php_error_docref(NULL, E_WARNING, 
-                "Phook: %s hook invalid signature, class=%s function=%s",
-                hook_type,
-                class_name ? ZSTR_VAL(class_name) : "null",
-                ZSTR_VAL(function_name));
+            if (PHOOK_G(display_warnings)) {
+                php_error_docref(NULL, E_WARNING, 
+                    "Phook: %s hook invalid signature, class=%s function=%s",
+                    hook_type,
+                    class_name ? ZSTR_VAL(class_name) : "null",
+                    ZSTR_VAL(function_name));
                 /* Note: Using consistent format for all error messages with class and function context */
+            }
             return NULL;
         }
     }
@@ -163,19 +188,8 @@ PHP_FUNCTION(Phook_hook) {
         Z_PARAM_ZVAL_OR_NULL(post)
     ZEND_PARSE_PARAMETERS_END();
 
-    if (pre != NULL && (Z_TYPE_P(pre) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(pre), zend_ce_closure))) {
-        php_error_docref(NULL, E_WARNING, "Phook: pre hook must be a Closure or NULL, class=%s function=%s",
-                         class_name ? ZSTR_VAL(class_name) : "null",
-                         ZSTR_VAL(function_name));
-        pre = NULL;
-    }
-
-    if (post != NULL && (Z_TYPE_P(post) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(post), zend_ce_closure))) {
-        php_error_docref(NULL, E_WARNING, "Phook: post hook must be a Closure or NULL, class=%s function=%s",
-                         class_name ? ZSTR_VAL(class_name) : "null",
-                         ZSTR_VAL(function_name));
-        post = NULL;
-    }
+    pre = ensure_closure_or_null(pre, "pre", class_name, function_name);
+    post = ensure_closure_or_null(post, "post", class_name, function_name);
 
     pre = validate_hook(pre, "pre", class_name, function_name);
     post = validate_hook(post, "post", class_name, function_name);
