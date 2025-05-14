@@ -141,9 +141,6 @@ static zval* validate_hook(zval *hook, const char *hook_type, zend_string *class
     
     if (zend_fcall_info_init(hook, 0, &fci, &fcc, NULL, NULL) == SUCCESS) {
         uint32_t param_count = fcc.function_handler->common.num_args;
-        if (param_count == 0) {
-            param_count = 1; // Ensure at least one parameter for is_valid_signature
-        }
         
         zval *params = emalloc(sizeof(zval) * param_count);
         
