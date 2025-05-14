@@ -141,6 +141,7 @@ static zval* validate_hook(zval *hook, const char *hook_type, zend_string *class
                 hook_type,
                 class_name ? ZSTR_VAL(class_name) : "null",
                 ZSTR_VAL(function_name));
+                /* Note: Using consistent format for all error messages with class and function context */
             return NULL;
         }
     }
