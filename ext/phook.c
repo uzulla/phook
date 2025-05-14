@@ -104,6 +104,50 @@ STD_PHP_INI_ENTRY("phook.attr_post_handler_function",
                   zend_phook_globals, phook_globals)
 PHP_INI_END()
 
+/**
+ * Validates a hook callback and returns NULL if invalid
+ * Uses dynamic allocation for params to avoid out-of-bounds access
+ */
+static zval* validate_hook(zval *hook, const char *hook_type, zend_string *class_name, zend_string *function_name) {
+    if (hook == NULL) {
+        return NULL;
+    }
+
+    zend_fcall_info fci = empty_fcall_info;
+    zend_fcall_info_cache fcc = empty_fcall_info_cache;
+    
+    if (zend_fcall_info_init(hook, 0, &fci, &fcc, NULL, NULL) == SUCCESS) {
+        uint32_t param_count = fcc.function_handler->common.num_args;
+        if (param_count == 0) {
+            param_count = 1; // Ensure at least one parameter for is_valid_signature
+        }
+        
+        zval *params = emalloc(sizeof(zval) * param_count);
+        
+        for (uint32_t i = 0; i < param_count; i++) {
+            ZVAL_NULL(&params[i]);
+        }
+        
+        fci.param_count = param_count;
+        fci.params = params;
+        
+        bool is_valid = is_valid_signature(fci, fcc);
+        
+        efree(params);
+        
+        if (!is_valid) {
+            php_error_docref(NULL, E_WARNING, 
+                "Phook: %s hook invalid signature, class=%s function=%s",
+                hook_type,
+                class_name ? ZSTR_VAL(class_name) : "null",
+                ZSTR_VAL(function_name));
+            return NULL;
+        }
+    }
+    
+    return hook;
+}
+
 PHP_FUNCTION(Phook_hook) {
     zend_string *class_name;
     zend_string *function_name;
@@ -119,64 +163,21 @@ PHP_FUNCTION(Phook_hook) {
     ZEND_PARSE_PARAMETERS_END();
 
     if (pre != NULL && (Z_TYPE_P(pre) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(pre), zend_ce_closure))) {
-        php_error_docref(NULL, E_WARNING, "Phook: pre hook must be a Closure or NULL");
+        php_error_docref(NULL, E_WARNING, "Phook: pre hook must be a Closure or NULL, class=%s function=%s",
+                         class_name ? ZSTR_VAL(class_name) : "null",
+                         ZSTR_VAL(function_name));
         pre = NULL;
     }
 
     if (post != NULL && (Z_TYPE_P(post) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(post), zend_ce_closure))) {
-        php_error_docref(NULL, E_WARNING, "Phook: post hook must be a Closure or NULL");
+        php_error_docref(NULL, E_WARNING, "Phook: post hook must be a Closure or NULL, class=%s function=%s",
+                         class_name ? ZSTR_VAL(class_name) : "null",
+                         ZSTR_VAL(function_name));
         post = NULL;
     }
 
-    if (pre != NULL) {
-        zend_fcall_info fci = empty_fcall_info;
-        zend_fcall_info_cache fcc = empty_fcall_info_cache;
-        
-        if (zend_fcall_info_init(pre, 0, &fci, &fcc, NULL, NULL) == SUCCESS) {
-            zval params[8];
-            uint32_t param_count = 8;
-            
-            for (uint32_t i = 0; i < param_count; i++) {
-                ZVAL_NULL(&params[i]);
-            }
-            
-            fci.param_count = param_count;
-            fci.params = params;
-            
-            if (!is_valid_signature(fci, fcc)) {
-                php_error_docref(NULL, E_WARNING, 
-                    "Phook: pre hook invalid signature, class=%s function=%s",
-                    class_name ? ZSTR_VAL(class_name) : "null",
-                    ZSTR_VAL(function_name));
-                pre = NULL;
-            }
-        }
-    }
-    
-    if (post != NULL) {
-        zend_fcall_info fci = empty_fcall_info;
-        zend_fcall_info_cache fcc = empty_fcall_info_cache;
-        
-        if (zend_fcall_info_init(post, 0, &fci, &fcc, NULL, NULL) == SUCCESS) {
-            zval params[8];
-            uint32_t param_count = 8;
-            
-            for (uint32_t i = 0; i < param_count; i++) {
-                ZVAL_NULL(&params[i]);
-            }
-            
-            fci.param_count = param_count;
-            fci.params = params;
-            
-            if (!is_valid_signature(fci, fcc)) {
-                php_error_docref(NULL, E_WARNING, 
-                    "Phook: post hook invalid signature, class=%s function=%s",
-                    class_name ? ZSTR_VAL(class_name) : "null",
-                    ZSTR_VAL(function_name));
-                post = NULL;
-            }
-        }
-    }
+    pre = validate_hook(pre, "pre", class_name, function_name);
+    post = validate_hook(post, "post", class_name, function_name);
 
     RETURN_BOOL(add_observer(class_name, function_name, pre, post));
 }
