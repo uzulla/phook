@@ -23,12 +23,6 @@ First, shell into the container:
 $ docker compose run debian
 ```
 
-## Using pear/pecl
-
-```shell
-$ pear build
-```
-
 ## From source code
 ```shell
 $ phpize
@@ -39,7 +33,7 @@ $ make install
 $ make clean
 ```
 
-This will build `opentelemetry.so` and install it into php modules dir (but not enable it).
+This will build `phook.so` and install it into php modules dir (but not enable it).
 
 To clean up, especially between builds with different PHP versions and/or build options:
 
@@ -54,12 +48,12 @@ or `make clean` from in the container.
 # Enabling the extension
 
 ```shell
-$ php -dextension=opentelemetry -m
+$ php -dextension=phook -m
 ```
 
 Or via .ini:
 ```shell
-$ echo 'extension=opentelemetry' > $(php-config --ini-dir)/opentelemetry.ini
+$ echo 'extension=phook' > $(php-config --ini-dir)/phook.ini
 ```
 
 If the extension is successfully installed, you will see it listed in the output of `php -m`.
@@ -86,7 +80,7 @@ Following, very simple script can be used as reference example, created and save
 
 ```shell
 <?php
-$ret = \OpenTelemetry\Instrumentation\hook(null, 'some_function');
+$ret = \Phook\hook(null, 'some_function');
 var_dump($ret);
 ?>
 ```
@@ -101,10 +95,10 @@ For gdb, arguments look very similar:
 gdb --args $HOME/php-bin/DEBUG/bin/php test.php
 ```
 
-and set breakpoint in function like `opentelemetry_observer_init` just to test if debugger will
+and set breakpoint in function like `phook_observer_init` just to test if debugger will
 stop there by:
 ```shell
-b opentelemetry_observer_init
+b phook_observer_init
 ```
 
 ## Docker
@@ -126,12 +120,12 @@ The docker image has gdb and valgrind installed, to enable debugging and memory-
 
 Run all tests with valgrind:
 ```shell
-php run-tests.php -d extension=$(pwd)/modules/opentelemetry.so -m
+php run-tests.php -d extension=$(pwd)/modules/phook.so -m
 ```
 
 Run one test with valgrind:
 ```shell
-php run-tests.php -d extension=$(pwd)/modules/opentelemetry.so -m tests/<name>.phpt
+php run-tests.php -d extension=$(pwd)/modules/phook.so -m tests/<name>.phpt
 ```
 
 If any tests fail, a `.sh` script is created which you can use
@@ -149,8 +143,8 @@ Further reading: https://www.phpinternalsbook.com/php7/memory_management/memory_
 To debug tests running in a docker container, you can use `gdbserver`:
 
 ```shell
-docker build --build-arg PHP_VERSION=8.2.11 -f docker/Dockerfile.debian . -t otel:8.2.11
-docker run --rm -it -p "2345:2345" -v $(pwd)/ext:/usr/src/myapp otel:8.2.11 bash
+docker build --build-arg PHP_VERSION=8.2.11 -f docker/Dockerfile.debian . -t phook:8.2.11
+docker run --rm -it -p "2345:2345" -v $(pwd)/ext:/usr/src/myapp phook:8.2.11 bash
 ```
 
 Then, inside the container:
@@ -159,22 +153,16 @@ Then, inside the container:
 phpize
 ./configure
 make
-gdbserver :2345 php -d extension=$(pwd)/modules/opentelemetry.so /path/to/file.php
+gdbserver :2345 php -d extension=$(pwd)/modules/phook.so /path/to/file.php
 ```
 
 Now, gdbserver should be running and awaiting a connection. Configure your IDE to connect via
 `gdb` to `127.0.0.1:2345` and start debugging, which should connect to the waiting server
 and start execution.
 
-# Packaging for PECL
-
-See https://github.com/opentelemetry-php/dev-tools#pecl-release-tool
-
 # Usage
 
 Basic usage is in the `tests/` directory.
-
-A more advanced example: https://github.com/open-telemetry/opentelemetry-php-contrib/pull/78/files
 
 # Further reading
 
