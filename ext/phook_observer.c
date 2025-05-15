@@ -750,10 +750,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                     
                     ZVAL_COPY(target, val);
 
-                    if (target_idx < arg_locator.provided &&
-                        Z_TYPE(params[1]) == IS_ARRAY) {
-                        // This index is present in the array provided to begin
-                        // hook, update it in that array as well
+                    if (Z_TYPE(params[1]) == IS_ARRAY) {
                         Z_TRY_ADDREF_P(val);
                         zend_hash_index_update(Z_ARR(params[1]), target_idx, val);
                     }
@@ -775,6 +772,10 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                                              "pre hook");
 
         zval_dtor(&ret);
+        
+        // Update params[1] to reflect the current state of arguments for the next hook
+        zval_ptr_dtor(&params[1]);
+        func_get_args(&params[1], NULL, execute_data, false);
     }
 
     if (UNEXPECTED(ZEND_CALL_INFO(execute_data) & ZEND_CALL_MAY_HAVE_UNDEF)) {
@@ -873,6 +874,10 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
                                              "post hook");
 
         zval_dtor(&ret);
+        
+        // Update params[2] to reflect the current state of return value for the next hook
+        zval_ptr_dtor(&params[2]);
+        func_get_retval(&params[2], execute_data->return_value);
     }
 
     for (size_t i = 0; i < param_count; i++) {
