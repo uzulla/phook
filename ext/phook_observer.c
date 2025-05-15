@@ -776,8 +776,37 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
 
         zval_dtor(&ret);
         
+        // Update params[1] to reflect the current state of arguments
         zval_ptr_dtor(&params[1]);
         func_get_args(&params[1], NULL, execute_data, false);
+        
+        if (element->next) {
+            if (Z_TYPE(params[1]) == IS_ARRAY) {
+                zend_ulong idx;
+                zend_string *str_idx;
+                zval *val;
+                
+                phook_arg_locator arg_locator;
+                arg_locator_initialize(&arg_locator, execute_data);
+                
+                ZEND_HASH_FOREACH_KEY_VAL(Z_ARR(params[1]), idx, str_idx, val) {
+                    if (str_idx != NULL) {
+                        idx = func_get_arg_index_by_name(execute_data, str_idx);
+                        if (idx == (uint32_t)-1) {
+                            continue;
+                        }
+                    }
+                    
+                    zval *target = arg_locator_get_slot(&arg_locator, idx, NULL);
+                    if (target != NULL) {
+                        zval_ptr_dtor(target);
+                        ZVAL_COPY(target, val);
+                    }
+                } ZEND_HASH_FOREACH_END();
+                
+                arg_locator_store_extended(&arg_locator);
+            }
+        }
     }
 
     if (UNEXPECTED(ZEND_CALL_INFO(execute_data) & ZEND_CALL_MAY_HAVE_UNDEF)) {
