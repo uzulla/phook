@@ -750,10 +750,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                     
                     ZVAL_COPY(target, val);
 
-                    if (target_idx < arg_locator.provided &&
-                        Z_TYPE(params[1]) == IS_ARRAY) {
-                        // This index is present in the array provided to begin
-                        // hook, update it in that array as well
+                    if (Z_TYPE(params[1]) == IS_ARRAY) {
                         Z_TRY_ADDREF_P(val);
                         zend_hash_index_update(Z_ARR(params[1]), target_idx, val);
                     }
