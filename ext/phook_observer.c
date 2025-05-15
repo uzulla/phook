@@ -777,10 +777,8 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
         zval_dtor(&ret);
         
         // Update params[1] to reflect the current state of arguments for the next hook
-        if (element->next) {
-            zval_ptr_dtor(&params[1]);
-            func_get_args(&params[1], NULL, execute_data, false);
-        }
+        zval_ptr_dtor(&params[1]);
+        func_get_args(&params[1], NULL, execute_data, false);
     }
 
     if (UNEXPECTED(ZEND_CALL_INFO(execute_data) & ZEND_CALL_MAY_HAVE_UNDEF)) {
@@ -881,10 +879,8 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
         zval_dtor(&ret);
         
         // Update params[2] to reflect the current state of return value for the next hook
-        if (element->prev) {
-            zval_ptr_dtor(&params[2]);
-            func_get_retval(&params[2], execute_data->return_value);
-        }
+        zval_ptr_dtor(&params[2]);
+        func_get_retval(&params[2], execute_data->return_value);
     }
 
     for (size_t i = 0; i < param_count; i++) {
