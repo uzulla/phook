@@ -775,6 +775,9 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                                              "pre hook");
 
         zval_dtor(&ret);
+        
+        zval_ptr_dtor(&params[1]);
+        func_get_args(&params[1], NULL, execute_data, false);
     }
 
     if (UNEXPECTED(ZEND_CALL_INFO(execute_data) & ZEND_CALL_MAY_HAVE_UNDEF)) {
