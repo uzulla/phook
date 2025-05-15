@@ -660,13 +660,65 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
 
     for (zend_llist_element *element = hooks->head; element;
          element = element->next) {
+        
         zend_fcall_info fci = empty_fcall_info;
         zend_fcall_info_cache fcc = empty_fcall_info_cache;
-        if (UNEXPECTED(zend_fcall_info_init((zval *)element->data, 0, &fci,
-                                            &fcc, NULL, NULL) != SUCCESS)) {
-            php_error_docref(NULL, E_WARNING,
-                             "Failed to initialize pre hook callable");
-            continue;
+        
+        zval *callable = (zval *)element->data;
+        if (Z_TYPE_P(callable) == IS_STRING && 
+            strstr(Z_STRVAL_P(callable), "Phook\\WithSpanHandler::") != NULL) {
+            // Ensure the class is loaded before initializing the callable
+            zval class_name_zval, class_exists_fn, retval;
+            ZVAL_STRING(&class_name_zval, "Phook\\WithSpanHandler");
+            ZVAL_STRING(&class_exists_fn, "class_exists");
+            
+            zval params[2];
+            params[0] = class_name_zval;
+            ZVAL_BOOL(&params[1], 1); // Enable autoloading
+            
+            call_user_function(EG(function_table), NULL, &class_exists_fn, &retval, 2, params);
+            
+            zval_ptr_dtor(&class_exists_fn);
+            zval_ptr_dtor(&class_name_zval);
+            if (Z_TYPE(retval) != IS_UNDEF) {
+                zval_ptr_dtor(&retval);
+            }
+        }
+        
+        // Special handling for WithSpanHandler with array callable
+        if (Z_TYPE_P(callable) == IS_STRING && 
+            strstr(Z_STRVAL_P(callable), "Phook\\WithSpanHandler::") != NULL) {
+            
+            // Create a new callable array [class, method]
+            zval new_callable;
+            array_init(&new_callable);
+            
+            char *method_name = strstr(Z_STRVAL_P(callable), "::") + 2;
+            
+            zval class_name;
+            ZVAL_STRING(&class_name, "Phook\\WithSpanHandler");
+            add_next_index_zval(&new_callable, &class_name);
+            
+            zval method;
+            ZVAL_STRING(&method, method_name);
+            add_next_index_zval(&new_callable, &method);
+            
+            if (UNEXPECTED(zend_fcall_info_init(&new_callable, 0, &fci,
+                                                &fcc, NULL, NULL) != SUCCESS)) {
+                php_error_docref(NULL, E_WARNING,
+                                "Failed to initialize pre hook callable");
+                zval_ptr_dtor(&new_callable);
+                continue;
+            }
+            
+            zval_ptr_dtor(&new_callable);
+        } else {
+            if (UNEXPECTED(zend_fcall_info_init((zval *)element->data, 1, &fci,
+                                                &fcc, NULL, NULL) != SUCCESS)) {
+                php_error_docref(NULL, E_WARNING,
+                                "Failed to initialize pre hook callable");
+                continue;
+            }
         }
 
         zval ret = {.u1.type_info = IS_UNDEF};
@@ -862,11 +914,62 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
          element = element->prev) {
         zend_fcall_info fci = empty_fcall_info;
         zend_fcall_info_cache fcc = empty_fcall_info_cache;
-        if (UNEXPECTED(zend_fcall_info_init((zval *)element->data, 0, &fci,
-                                            &fcc, NULL, NULL) != SUCCESS)) {
-            php_error_docref(NULL, E_WARNING,
-                             "Failed to initialize post hook callable");
-            continue;
+        
+        zval *callable = (zval *)element->data;
+        if (Z_TYPE_P(callable) == IS_STRING && 
+            strstr(Z_STRVAL_P(callable), "Phook\\WithSpanHandler::") != NULL) {
+            // Ensure the class is loaded before initializing the callable
+            zval class_name_zval, class_exists_fn, retval;
+            ZVAL_STRING(&class_name_zval, "Phook\\WithSpanHandler");
+            ZVAL_STRING(&class_exists_fn, "class_exists");
+            
+            zval params[2];
+            params[0] = class_name_zval;
+            ZVAL_BOOL(&params[1], 1); // Enable autoloading
+            
+            call_user_function(EG(function_table), NULL, &class_exists_fn, &retval, 2, params);
+            
+            zval_ptr_dtor(&class_exists_fn);
+            zval_ptr_dtor(&class_name_zval);
+            if (Z_TYPE(retval) != IS_UNDEF) {
+                zval_ptr_dtor(&retval);
+            }
+        }
+        
+        // Special handling for WithSpanHandler
+        if (Z_TYPE_P(callable) == IS_STRING && 
+            strstr(Z_STRVAL_P(callable), "Phook\\WithSpanHandler::") != NULL) {
+            
+            // Create a new callable array [class, method]
+            zval new_callable;
+            array_init(&new_callable);
+            
+            char *method_name = strstr(Z_STRVAL_P(callable), "::") + 2;
+            
+            zval class_name;
+            ZVAL_STRING(&class_name, "Phook\\WithSpanHandler");
+            add_next_index_zval(&new_callable, &class_name);
+            
+            zval method;
+            ZVAL_STRING(&method, method_name);
+            add_next_index_zval(&new_callable, &method);
+            
+            if (UNEXPECTED(zend_fcall_info_init(&new_callable, 0, &fci,
+                                                &fcc, NULL, NULL) != SUCCESS)) {
+                php_error_docref(NULL, E_WARNING,
+                                "Failed to initialize post hook callable");
+                zval_ptr_dtor(&new_callable);
+                continue;
+            }
+            
+            zval_ptr_dtor(&new_callable);
+        } else {
+            if (UNEXPECTED(zend_fcall_info_init((zval *)element->data, 1, &fci,
+                                                &fcc, NULL, NULL) != SUCCESS)) {
+                php_error_docref(NULL, E_WARNING,
+                                "Failed to initialize post hook callable");
+                continue;
+            }
         }
 
         zval ret = {.u1.type_info = IS_UNDEF};
@@ -1060,10 +1163,75 @@ static void find_method_observers(HashTable *ht, zend_class_entry *ce,
     zend_hash_destroy(&type_visited_lookup);
 }
 
-static zval create_attribute_observer_handler(char *fn) {
+static bool is_valid_callable(char *fn) {
+    if (strstr(fn, "Phook\\WithSpanHandler::") != NULL) {
+        zend_string *class_name = zend_string_init("Phook\\WithSpanHandler", 19, 0);
+        bool exists = (zend_lookup_class_ex(class_name, NULL, ZEND_FETCH_CLASS_NO_AUTOLOAD) != NULL);
+        zend_string_release(class_name);
+        
+        if (!exists) {
+            zval class_name_zval, class_exists_fn, retval;
+            ZVAL_STRINGL(&class_name_zval, "Phook\\WithSpanHandler", 19);
+            ZVAL_STRING(&class_exists_fn, "class_exists");
+            
+            zval params[2];
+            params[0] = class_name_zval;
+            ZVAL_BOOL(&params[1], 1); // Enable autoloading
+            
+            call_user_function(EG(function_table), NULL, &class_exists_fn, &retval, 2, params);
+            
+            zval_ptr_dtor(&class_exists_fn);
+            zval_ptr_dtor(&class_name_zval);
+            if (Z_TYPE(retval) != IS_UNDEF) {
+                zval_ptr_dtor(&retval);
+            }
+        }
+        
+        return true;
+    }
+    
     zval callable;
     ZVAL_STRING(&callable, fn);
+    
+    zend_fcall_info fci = empty_fcall_info;
+    zend_fcall_info_cache fcc = empty_fcall_info_cache;
+    bool result = (zend_fcall_info_init(&callable, 0, &fci, &fcc, NULL, NULL) == SUCCESS);
+    
+    zval_ptr_dtor(&callable);
+    return result;
+}
 
+static zval create_attribute_observer_handler(char *fn) {
+    zval callable;
+    
+    // Special handling for WithSpanHandler to ensure autoloading
+    if (strstr(fn, "Phook\\WithSpanHandler::") != NULL) {
+        zend_string *class_name = zend_string_init("Phook\\WithSpanHandler", 19, 0);
+        bool exists = (zend_lookup_class_ex(class_name, NULL, ZEND_FETCH_CLASS_NO_AUTOLOAD) != NULL);
+        zend_string_release(class_name);
+        
+        if (!exists) {
+            zval class_name_zval, class_exists_fn, retval;
+            ZVAL_STRINGL(&class_name_zval, "Phook\\WithSpanHandler", 19);
+            ZVAL_STRING(&class_exists_fn, "class_exists");
+            
+            zval params[2];
+            params[0] = class_name_zval;
+            ZVAL_BOOL(&params[1], 1); // Enable autoloading
+            
+            call_user_function(EG(function_table), NULL, &class_exists_fn, &retval, 2, params);
+            
+            zval_ptr_dtor(&class_exists_fn);
+            zval_ptr_dtor(&class_name_zval);
+            if (Z_TYPE(retval) != IS_UNDEF) {
+                zval_ptr_dtor(&retval);
+            }
+        }
+    }
+    
+    // Create the callable
+    ZVAL_STRING(&callable, fn);
+    
     return callable;
 }
 
@@ -1101,14 +1269,27 @@ static phook_observer *resolve_observer(zend_execute_data *execute_data) {
             // there are no observers registered for this function/method, but
             // it has a WithSpan attribute. Add configured attribute-based
             // pre/post handlers as new observers.
-            zval pre = create_attribute_observer_handler(
-                PHOOK_G(pre_handler_function_fqn));
-            zval post = create_attribute_observer_handler(
-                PHOOK_G(post_handler_function_fqn));
-            add_observer(fbc->op_array.scope ? fbc->op_array.scope->name : NULL,
-                         fbc->common.function_name, &pre, &post);
-            zval_ptr_dtor(&pre);
-            zval_ptr_dtor(&post);
+            
+            // Always use create_attribute_observer_handler to ensure consistent autoloading
+            bool pre_valid = is_valid_callable(PHOOK_G(pre_handler_function_fqn));
+            bool post_valid = is_valid_callable(PHOOK_G(post_handler_function_fqn));
+            
+            if (pre_valid || post_valid) {
+                if (pre_valid) {
+                    zval pre = create_attribute_observer_handler(PHOOK_G(pre_handler_function_fqn));
+                    add_observer(fbc->op_array.scope ? fbc->op_array.scope->name : NULL,
+                                fbc->common.function_name, &pre, NULL);
+                    zval_ptr_dtor(&pre);
+                }
+                
+                if (post_valid) {
+                    zval post = create_attribute_observer_handler(PHOOK_G(post_handler_function_fqn));
+                    add_observer(fbc->op_array.scope ? fbc->op_array.scope->name : NULL,
+                                fbc->common.function_name, NULL, &post);
+                    zval_ptr_dtor(&post);
+                }
+            }
+            
             // re-find to update pre/post hooks
             if (fbc->op_array.scope) {
                 find_method_observers(

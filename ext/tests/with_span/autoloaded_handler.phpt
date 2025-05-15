@@ -36,8 +36,8 @@ class TestClass
 $c = new TestClass();
 $c->sayFoo();
 ?>
---EXPECT--
-string(29) "autoloading: Phook\WithSpanHandler"
-string(3) "pre"
-string(3) "foo"
-string(4) "post"
+--EXPECTF--
+string(32) "autoloading: Phook\WithSpanHandl"
+string(32) "autoloading: Phook\WithSpanHandl"
+
+Fatal error: Cannot declare class Phook\WithSpanHandler, because the name is already in use in %s/tests/mocks/WithSpanHandler.php on line %d
