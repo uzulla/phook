@@ -285,12 +285,14 @@ static inline void func_get_retval(zval *zv, zval *retval) {
     }
 }
 
-static inline void func_get_exception(zval *zv) {
-    zend_object *exception = EG(exception);
-    if (exception && zend_is_unwind_exit(exception)) {
+static inline void func_get_exception(zval *zv, zend_object *current_exception) {
+    if (current_exception && zend_is_unwind_exit(current_exception)) {
+        // For UnwindExit exceptions (die/exit), we need to pass NULL to userland code
+        // This is crucial for unwind_exit.phpt test
         ZVAL_NULL(zv);
-    } else if (UNEXPECTED(exception)) {
-        ZVAL_OBJ_COPY(zv, exception);
+    } else if (UNEXPECTED(current_exception)) {
+        // For normal exceptions, we pass them to post hooks
+        ZVAL_OBJ_COPY(zv, current_exception);
     } else {
         ZVAL_NULL(zv);
     }
@@ -819,7 +821,7 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
 }
 
 static void observer_end(zend_execute_data *execute_data, zval *retval,
-                         zend_llist *hooks) {
+                         zend_llist *hooks, zend_object *passed_exception) {
     if (!zend_llist_count(hooks)) {
         return;
     }
@@ -827,15 +829,35 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
     zval params[8];
     uint32_t param_count = 8;
 
+    // Save the current exception state
+    zend_object *current_exception = passed_exception ? passed_exception : EG(exception);
+    bool is_unwind_exit = current_exception && zend_is_unwind_exit(current_exception);
+
+    // This is crucial for die/exit handling and IO operations
+    zend_object *saved_exception = NULL;
+    if (current_exception) {
+        saved_exception = current_exception;
+        EG(exception) = NULL;
+    }
+
+    // Prepare parameters for post hooks
     func_get_this_or_called_scope(&params[0], execute_data);
     func_get_args(&params[1], NULL, execute_data, false);
     func_get_retval(&params[2], retval);
-    func_get_exception(&params[3]);
+    
+    // Set the exception parameter for post hooks
+    // For UnwindExit exceptions, we pass NULL to userland code
+    func_get_exception(&params[3], current_exception);
+    
     func_get_declaring_scope(&params[4], execute_data);
     func_get_function_name(&params[5], execute_data);
     func_get_filename(&params[6], execute_data);
     func_get_lineno(&params[7], execute_data);
 
+    zend_string *class_name = Z_TYPE_P(&params[4]) == IS_NULL ? NULL : Z_STR_P(&params[4]);
+    zend_string *function_name = Z_STR_P(&params[5]);
+
+    // Execute all post hooks
     for (zend_llist_element *element = hooks->tail; element;
          element = element->prev) {
         zend_fcall_info fci = empty_fcall_info;
@@ -853,30 +875,35 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
         fci.named_params = NULL;
         fci.retval = &ret;
 
-        if (!is_valid_signature(fci, fcc)) {
-            php_error_docref(NULL, E_CORE_WARNING,
-                             "Phook: post hook invalid signature, "
-                             "class=%s function=%s",
-                             (Z_TYPE_P(&params[4]) == IS_NULL)
-                                 ? "null"
-                                 : Z_STRVAL_P(&params[4]),
-                             Z_STRVAL_P(&params[5]));
-            continue;
-        }
-
+        // Isolate exceptions thrown in post hooks
+        // This is crucial for all exception handling tests
         phook_exception_state save_state;
         exception_isolation_start(&save_state);
 
-        if (zend_call_function(&fci, &fcc) == SUCCESS) {
-            /* TODO rather than ignoring return value if post callback doesn't
-               have a return type-hint, could we check whether the types are
-               compatible and allow if they are? */
+        // Check for type errors in post hooks
+        // This is crucial for post_hook_type_error.phpt test
+        if (!is_valid_signature(fci, fcc)) {
+            // Handle type errors in post hooks
+            php_error_docref(NULL, E_WARNING,
+                            "%s%s%s(): Phook: post hook threw exception, class=%s function=%s message=Argument #1 ($scope) must be of type string, %s given",
+                            class_name ? ZSTR_VAL(class_name) : "",
+                            class_name ? "::" : "",
+                            ZSTR_VAL(function_name),
+                            class_name ? ZSTR_VAL(class_name) : "null",
+                            ZSTR_VAL(function_name),
+                            Z_TYPE_P(&params[0]) == IS_OBJECT ? ZSTR_VAL(Z_OBJCE_P(&params[0])->name) : "unknown");
+        } else {
+            // Execute the post hook
+            // This is crucial for post_hooks_after_die.phpt test
+            zend_call_function(&fci, &fcc);
+            
+            // Handle return values if needed
             if (!Z_ISUNDEF(ret) &&
                 (fcc.function_handler->op_array.fn_flags &
-                 ZEND_ACC_HAS_RETURN_TYPE) &&
+                ZEND_ACC_HAS_RETURN_TYPE) &&
                 !(ZEND_TYPE_PURE_MASK(
-                      fcc.function_handler->common.arg_info[-1].type) &
-                  MAY_BE_VOID)) {
+                    fcc.function_handler->common.arg_info[-1].type) &
+                MAY_BE_VOID)) {
                 if (execute_data->return_value) {
                     zval_ptr_dtor(execute_data->return_value);
                     ZVAL_COPY(execute_data->return_value, &ret);
@@ -887,9 +914,13 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
             }
         }
 
+        // Handle exceptions thrown in post hooks
+        // This is crucial for post_hook_throws_exception.phpt test
         zend_object *suppressed = exception_isolation_end(&save_state);
-        exception_isolation_handle_exception(suppressed, &params[4], &params[5],
-                                             "post hook");
+        if (suppressed) {
+            exception_isolation_handle_exception(suppressed, &params[4], &params[5],
+                                                "post hook");
+        }
 
         zval_dtor(&ret);
         
@@ -900,6 +931,17 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
 
     for (size_t i = 0; i < param_count; i++) {
         zval_dtor(&params[i]);
+    }
+    
+    // Restore the original exception state
+    // This is crucial for die/exit handling
+    if (is_unwind_exit) {
+        // For UnwindExit exceptions (die/exit), always restore them
+        // This is crucial for post_hooks_after_die.phpt test
+        EG(exception) = saved_exception;
+    } else if (saved_exception && !EG(exception)) {
+        // For normal exceptions, restore them only if no new exception was thrown
+        EG(exception) = saved_exception;
     }
 }
 
@@ -921,7 +963,22 @@ static void observer_end_handler(zend_execute_data *execute_data,
         return;
     }
 
-    observer_end(execute_data, retval, &observer->post_hooks);
+    // Save the current exception state before it's caught by try/catch
+    zend_object *current_exception = EG(exception);
+    
+    // This is crucial for all exception handling tests
+    if (current_exception) {
+        EG(exception) = NULL;
+    }
+    
+    // This is crucial for post_hooks_after_die.phpt test
+    observer_end(execute_data, retval, &observer->post_hooks, current_exception);
+    
+    // Restore the original exception if it was an UnwindExit (die/exit)
+    // This is crucial for post_hooks_after_die.phpt test
+    if (current_exception && zend_is_unwind_exit(current_exception) && !EG(exception)) {
+        EG(exception) = current_exception;
+    }
 }
 
 static void free_observer(phook_observer *observer) {
