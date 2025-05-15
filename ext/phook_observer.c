@@ -879,6 +879,12 @@ static void observer_end(zend_execute_data *execute_data, zval *retval,
                                              "post hook");
 
         zval_dtor(&ret);
+        
+        // Update params[2] to reflect the current state of return value for the next hook
+        if (element->prev) {
+            zval_ptr_dtor(&params[2]);
+            func_get_retval(&params[2], execute_data->return_value);
+        }
     }
 
     for (size_t i = 0; i < param_count; i++) {
