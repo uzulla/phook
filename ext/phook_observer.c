@@ -384,13 +384,29 @@ bool is_valid_signature(zend_fcall_info fci,
     if (PHOOK_G(validate_hook_functions) == 0) {
         return 1;
     }
+    
     zend_function *func = fcc.function_handler;
+    
+    if (func->common.num_args < 2) {
+        return false;
+    }
+    
+    if (func->common.num_args >= 2) {
+        zend_arg_info *arg_info = &func->common.arg_info[1];
+        zend_type *arg_type = &arg_info->type;
+        uint32_t type_mask = arg_type->type_mask;
+        
+        if ((type_mask & (1 << IS_ARRAY)) != 0) {
+            return true;
+        }
+    }
+    
     zend_arg_info *arg_info;
     zend_type *arg_type;
     uint32_t type;
     uint32_t type_mask;
 
-    for (uint32_t i = 0; i < func->common.num_args; i++) {
+    for (uint32_t i = 0; i < func->common.num_args && i < fci.param_count; i++) {
         // get type mask of callback argument
         arg_info = &func->common.arg_info[i];
         arg_type = &arg_info->type;
@@ -667,11 +683,12 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
 
                 ZEND_HASH_FOREACH_KEY_VAL(Z_ARR(ret), idx, str_idx, val) {
                     const char *failure_reason = "";
+                    uint32_t target_idx = idx;
 
                     if (str_idx != NULL) {
-                        idx = func_get_arg_index_by_name(execute_data, str_idx);
+                        uint32_t named_idx = func_get_arg_index_by_name(execute_data, str_idx);
 
-                        if (idx == (uint32_t)-1) {
+                        if (named_idx == (uint32_t)-1) {
                             php_error_docref(
                                 NULL, E_CORE_WARNING,
                                 "Phook: pre hook unknown "
@@ -680,9 +697,11 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                                 zval_get_chars(&params[3]));
                             continue;
                         }
+                        
+                        target_idx = named_idx;
                     }
 
-                    zval *target = arg_locator_get_slot(&arg_locator, idx,
+                    zval *target = arg_locator_get_slot(&arg_locator, target_idx,
                                                         &failure_reason);
 
                     if (target == NULL) {
@@ -692,34 +711,34 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
 
                         php_error_docref(NULL, E_CORE_WARNING,
                                          "Phook: pre hook invalid "
-                                         "argument index " ZEND_ULONG_FMT
+                                         "argument index %u"
                                          " - %s, class=%s function=%s",
-                                         idx, failure_reason,
+                                         target_idx, failure_reason,
                                          zval_get_chars(&params[2]),
                                          zval_get_chars(&params[3]));
                         invalid_arg_warned = true;
                         continue;
                     }
 
-                    if (idx >= args_initialized) {
+                    if (target_idx >= args_initialized) {
                         // This slot was not initialized, need to initialize
                         // all slots between current and the last initialized
                         // one
-                        for (uint32_t i = args_initialized; i < idx; i++) {
+                        for (uint32_t i = args_initialized; i < target_idx; i++) {
                             ZVAL_UNDEF(
                                 arg_locator_get_slot(&arg_locator, i, NULL));
                             ZEND_ADD_CALL_FLAG(execute_data,
                                                ZEND_CALL_MAY_HAVE_UNDEF);
                         }
 
-                        args_initialized = idx + 1;
+                        args_initialized = target_idx + 1;
                     } else {
                         // This slot was already initialized, need to
                         // decrement refcount before overwriting
                         zval_dtor(target);
                     }
 
-                    if (idx >= arg_locator.reserved && Z_REFCOUNTED_P(val)) {
+                    if (target_idx >= arg_locator.reserved && Z_REFCOUNTED_P(val)) {
                         // If there are any "extra parameters" that are
                         // refcounted, then this flag must be set. While we
                         // cannot add any new extra parameter slots, this flag
@@ -728,15 +747,15 @@ static void observer_begin(zend_execute_data *execute_data, zend_llist *hooks) {
                         ZEND_ADD_CALL_FLAG(execute_data,
                                            ZEND_CALL_FREE_EXTRA_ARGS);
                     }
-
+                    
                     ZVAL_COPY(target, val);
 
-                    if (idx < arg_locator.provided &&
+                    if (target_idx < arg_locator.provided &&
                         Z_TYPE(params[1]) == IS_ARRAY) {
                         // This index is present in the array provided to begin
                         // hook, update it in that array as well
                         Z_TRY_ADDREF_P(val);
-                        zend_hash_index_update(Z_ARR(params[1]), idx, val);
+                        zend_hash_index_update(Z_ARR(params[1]), target_idx, val);
                     }
                 }
                 ZEND_HASH_FOREACH_END();
