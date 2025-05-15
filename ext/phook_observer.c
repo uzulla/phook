@@ -522,7 +522,7 @@ static void arg_locator_initialize(phook_arg_locator *arg_locator,
         // slots, and there is nothing after auxiliary slots.
         arg_locator->reserved = ZEND_CALL_NUM_ARGS(execute_data);
     } else {
-        arg_locator->reserved = execute_data->func->op_array.last_var;
+        arg_locator->reserved = execute_data->func->op_array.num_args;
     }
 
     arg_locator->provided = ZEND_CALL_NUM_ARGS(execute_data);
@@ -551,14 +551,17 @@ static zval *arg_locator_get_slot(phook_arg_locator *arg_locator, uint32_t index
     if (index < arg_locator->reserved) {
         return ZEND_CALL_ARG(arg_locator->execute_data, index + 1);
     } else if (index < arg_locator->provided) {
-        return ZEND_CALL_ARG(arg_locator->execute_data,
-                             index + arg_locator->auxiliary_slots + 1);
+        if (arg_locator->execute_data->func->type == ZEND_INTERNAL_FUNCTION) {
+            return ZEND_CALL_ARG(arg_locator->execute_data, index + 1);
+        } else {
+            return ZEND_CALL_ARG(arg_locator->execute_data,
+                                index + arg_locator->auxiliary_slots + 1);
+        }
     }
 
     uint32_t extended_index = index - arg_locator->extended_start;
 
     if (extended_index < arg_locator->extended_max) {
-        uint32_t extended_index = index - arg_locator->extended_start;
         if (extended_index >= arg_locator->extended_used) {
             arg_locator->extended_used = extended_index + 1;
         }
@@ -607,11 +610,26 @@ static void arg_locator_store_extended(phook_arg_locator *arg_locator) {
     } else {
         // For PHP functions, the additional arguments go to the end of the
         // frame, so nothing else needs to be moved around
-        zval *target = ZEND_CALL_ARG(arg_locator->execute_data,
-                                     arg_locator->extended_start +
-                                         arg_locator->auxiliary_slots + 1);
+        zval *target;
+        
+        if (arg_locator->extended_start >= arg_locator->reserved) {
+            // If we're adding arguments beyond the reserved slots, we need to account for auxiliary slots
+            target = ZEND_CALL_ARG(arg_locator->execute_data,
+                                   arg_locator->extended_start + arg_locator->auxiliary_slots + 1);
+        } else {
+            // If we're adding arguments within the reserved slots, we don't need to account for auxiliary slots
+            target = ZEND_CALL_ARG(arg_locator->execute_data,
+                                   arg_locator->extended_start + 1);
+        }
+        
         memcpy(target, arg_locator->extended_slots,
                sizeof(*target) * arg_locator->extended_used);
+    }
+    
+    // Update the number of arguments if we've added more than were originally provided
+    uint32_t new_arg_count = arg_locator->extended_start + arg_locator->extended_used;
+    if (new_arg_count > ZEND_CALL_NUM_ARGS(arg_locator->execute_data)) {
+        ZEND_CALL_NUM_ARGS(arg_locator->execute_data) = new_arg_count;
     }
 }
 
