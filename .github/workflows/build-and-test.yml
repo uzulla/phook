@@ -1,0 +1,39 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build and Test PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.0.30', '8.1.31', '8.2.27', '8.3.20']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: PHP_VERSION=${{ matrix.php-version }} docker compose build debian
+
+      - name: Build extension
+        run: docker compose run debian ./build.sh
+
+      - name: Run tests
+        run: docker compose run debian make test
+
+      - name: Run code formatting check
+        run: |
+          # Run format.sh to check if code is properly formatted
+          docker compose run debian ./format.sh
+          # Check if there are any changes after formatting
+          git diff --exit-code || (echo "Code formatting issues found. Please run 'make format' locally and commit the changes." && exit 1)
