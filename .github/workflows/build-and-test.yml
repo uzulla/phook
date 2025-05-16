@@ -27,7 +27,7 @@ jobs:
         run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian ./build.sh
 
       - name: Run tests
-        run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian make test
+        run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian bash -c "cd /usr/src/myapp && php run-tests.php -d extension=\$(pwd)/modules/phook.so -m"
 
       - name: Check code formatting
         run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian ./format.sh
