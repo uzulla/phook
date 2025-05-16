@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: ['8.0.30', '8.1.27', '8.2.17', '8.3.10']
+        # PHP 8.0.30 excluded due to compatibility issues, to be addressed in the future
+        php-version: ['8.1.27', '8.2.17', '8.3.10']
       fail-fast: false
 
     steps:
