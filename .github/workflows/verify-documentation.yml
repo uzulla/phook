@@ -1,0 +1,42 @@
+name: Verify Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'DEVELOPMENT.md'
+      - '.github/workflows/verify-documentation.yml'
+
+jobs:
+  verify-documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: PHP_VERSION=8.3.10 docker compose build debian
+
+      - name: Test documentation steps
+        run: |
+          docker compose run debian bash -c "
+            set -e
+            cd /usr/src/myapp
+            # Test steps from DEVELOPMENT.md
+            phpize
+            ./configure
+            make
+            php -d extension=\$(pwd)/modules/phook.so -d phook.display_warnings=Off run-tests.php -m
+            make install
+            php -dextension=phook -m | grep -q phook
+            
+            # Test valgrind steps
+            php -d extension=\$(pwd)/modules/phook.so -d phook.display_warnings=Off run-tests.php -m tests/001.phpt
+            
+            # Clean up
+            make clean
+          "
