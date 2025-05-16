@@ -90,5 +90,17 @@ if test "$PHP_PHOOK" != "no"; then
   dnl In case of no dependencies
   AC_DEFINE(HAVE_PHOOK, 1, [ Have phook support ])
 
+  dnl Check PHP version and define compatibility macros
+  AC_MSG_CHECKING([PHP version])
+  PHP_VERSION=`$PHP_CONFIG --version`
+  AC_MSG_RESULT([$PHP_VERSION])
+  
+  PHP_VERSION_MAJOR=`echo $PHP_VERSION | $AWK -F'.' '{print $1}'`
+  PHP_VERSION_MINOR=`echo $PHP_VERSION | $AWK -F'.' '{print $2}'`
+  PHP_VERSION_RELEASE=`echo $PHP_VERSION | $AWK -F'.' '{print $3}' | $AWK -F'-' '{print $1}'`
+  
+  PHP_VERSION_ID=`expr $PHP_VERSION_MAJOR \* 10000 + $PHP_VERSION_MINOR \* 100 + $PHP_VERSION_RELEASE`
+  AC_DEFINE_UNQUOTED(PHP_VERSION_ID, $PHP_VERSION_ID, [PHP version ID])
+  
   PHP_NEW_EXTENSION(phook, phook.c phook_observer.c, $ext_shared,, "-Wall -Wextra -Werror -Wno-unused-parameter")
 fi

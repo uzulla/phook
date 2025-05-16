@@ -12,6 +12,12 @@
 #include "string.h"
 #include "zend_attributes.h"
 #include "zend_closures.h"
+#include "phook_compat.h"
+
+#if PHP_VERSION_ID >= 80400
+#include "zend_hrtime.h"
+#include "zend_atomic.h"
+#endif
 
 static int check_conflict(HashTable *registry, const char *extension_name) {
     if (!extension_name || !*extension_name) {
@@ -35,7 +41,10 @@ static void check_conflicts() {
     int conflict_found = 0;
     char *input = PHOOK_G(conflicts);
 
+    php_printf("DEBUG: check_conflicts called, conflicts=%s\n", input ? input : "NULL");
+
     if (!input || !*input) {
+        php_printf("DEBUG: No conflicts configured, extension enabled\n");
         return;
     }
 
@@ -52,8 +61,10 @@ static void check_conflicts() {
                 char *result = (char *)malloc((len + 1) * sizeof(char));
                 strncpy(result, s, len);
                 result[len] = '\0'; // null terminate
+                php_printf("DEBUG: Checking for conflict with extension: %s\n", result);
                 if (check_conflict(registry, result)) {
                     conflict_found = 1;
+                    php_printf("DEBUG: Conflict found with extension: %s\n", result);
                 }
                 s = NULL;
             }
@@ -66,11 +77,16 @@ static void check_conflicts() {
         }
         e++;
     }
-    if (check_conflict(registry, s)) {
-        conflict_found = 1;
+    if (s) {
+        php_printf("DEBUG: Checking for conflict with extension: %s\n", s);
+        if (check_conflict(registry, s)) {
+            conflict_found = 1;
+            php_printf("DEBUG: Conflict found with extension: %s\n", s);
+        }
     }
 
     PHOOK_G(disabled) = conflict_found;
+    php_printf("DEBUG: Extension %s\n", conflict_found ? "disabled due to conflicts" : "enabled");
 }
 
 ZEND_DECLARE_MODULE_GLOBALS(phook)
@@ -177,6 +193,8 @@ PHP_FUNCTION(Phook_hook) {
     zval *pre = NULL;
     zval *post = NULL;
 
+    php_printf("DEBUG: Phook_hook function called\n");
+
     ZEND_PARSE_PARAMETERS_START(2, 4)
         Z_PARAM_STR_OR_NULL(class_name)
         Z_PARAM_STR(function_name)
@@ -185,13 +203,22 @@ PHP_FUNCTION(Phook_hook) {
         Z_PARAM_ZVAL_OR_NULL(post)
     ZEND_PARSE_PARAMETERS_END();
 
+    php_printf("DEBUG: Phook_hook parameters parsed, function_name=%s\n", ZSTR_VAL(function_name));
+
     pre = ensure_closure_or_null(pre, "pre", class_name, function_name);
     post = ensure_closure_or_null(post, "post", class_name, function_name);
+
+    php_printf("DEBUG: Phook_hook closures validated\n");
 
     pre = validate_hook(pre, "pre", class_name, function_name);
     post = validate_hook(post, "post", class_name, function_name);
 
-    RETURN_BOOL(add_observer(class_name, function_name, pre, post));
+    php_printf("DEBUG: Phook_hook hooks validated\n");
+
+    bool result = add_observer(class_name, function_name, pre, post);
+    php_printf("DEBUG: Phook_hook add_observer result=%d\n", result);
+
+    RETURN_BOOL(result);
 }
 
 PHP_RINIT_FUNCTION(phook) {
