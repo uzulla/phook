@@ -25,16 +25,17 @@ jobs:
         run: |
           docker compose run debian bash -c "
             set -e
+            cd /usr/src/myapp
             # Test steps from DEVELOPMENT.md
             phpize
             ./configure
             make
-            php run-tests.php -d extension=\$(pwd)/modules/phook.so -m 2>/dev/null
+            php -d extension=\$(pwd)/modules/phook.so -d phook.display_warnings=Off run-tests.php -m
             make install
             php -dextension=phook -m | grep -q phook
             
             # Test valgrind steps
-            php run-tests.php -d extension=\$(pwd)/modules/phook.so -m tests/001.phpt 2>/dev/null
+            php -d extension=\$(pwd)/modules/phook.so -d phook.display_warnings=Off run-tests.php -m tests/001.phpt
             
             # Clean up
             make clean
