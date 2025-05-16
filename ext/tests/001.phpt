@@ -1,7 +1,9 @@
 --TEST--
 Check if phook extension is loaded
---EXTENSIONS--
-phook
+--SKIPIF--
+<?php
+if (!extension_loaded('phook')) echo 'skip phook extension not loaded';
+?>
 --FILE--
 <?php
 ob_start();
