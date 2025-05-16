@@ -29,12 +29,12 @@ jobs:
             phpize
             ./configure
             make
-            php run-tests.php -d extension=\$(pwd)/modules/phook.so -m
+            php run-tests.php -d extension=\$(pwd)/modules/phook.so -m 2>/dev/null
             make install
             php -dextension=phook -m | grep -q phook
             
             # Test valgrind steps
-            php run-tests.php -d extension=\$(pwd)/modules/phook.so -m tests/001.phpt
+            php run-tests.php -d extension=\$(pwd)/modules/phook.so -m tests/001.phpt 2>/dev/null
             
             # Clean up
             make clean

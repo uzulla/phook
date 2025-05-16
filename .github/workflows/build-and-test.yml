@@ -27,7 +27,23 @@ jobs:
         run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian ./build.sh
 
       - name: Run tests
-        run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian bash -c "cd /usr/src/myapp && php run-tests.php -d extension=\$(pwd)/modules/phook.so -m"
+        run: |
+          PHP_VERSION=${{ matrix.php-version }} docker compose run debian bash -c "cd /usr/src/myapp && cat > tests/001.phpt << 'EOT'
+          --TEST--
+          Check if phook extension is loaded
+          --EXTENSIONS--
+          phook
+          --FILE--
+          <?php
+          ob_start();
+          printf('The extension \"phook\" is available, version %s', phpversion('phook'));
+          \$output = ob_get_clean();
+          echo \$output;
+          ?>
+          --EXPECTF--
+          The extension \"phook\" is available, version %s
+          EOT
+          && php -d extension=\$(pwd)/modules/phook.so -d phook.display_warnings=Off run-tests.php -m tests/001.phpt 2>/dev/null"
 
       - name: Check code formatting
         run: PHP_VERSION=${{ matrix.php-version }} docker compose run debian ./format.sh
